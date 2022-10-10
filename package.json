@@ -1,0 +1,96 @@
+{
+  "name": "everfit-exercise",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "Alex Huynh",
+    "email": "htquangg@gmail.com",
+    "url": "https://www.linkedin.com/in/htquangg/"
+  },
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "nx build",
+    "commitlint": "commitlint -c .commitlintrc.json -E HUSKY_GIT_PARAMS",
+    "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
+    "lint": "eslint \"{app,libs}/**/*.ts\" --fix",
+    "prepare": "husky install",
+    "start": "nx serve",
+    "test": "nx test"
+  },
+  "lint-staged": {
+    "**/*.ts": [
+      "prettier --ignore-path ./.prettierignore --write"
+    ],
+    "package.json": [
+      "sort-package-json"
+    ]
+  },
+  "dependencies": {
+    "@nestjs/bull": "^0.6.1",
+    "@nestjs/common": "^9.0.0",
+    "@nestjs/config": "^2.2.0",
+    "@nestjs/core": "^9.0.0",
+    "@nestjs/event-emitter": "^1.3.1",
+    "@nestjs/jwt": "^9.0.0",
+    "@nestjs/platform-express": "^9.0.0",
+    "@nestjs/throttler": "^3.0.0",
+    "@nestjs/typeorm": "^9.0.1",
+    "aws-sdk": "^2.1227.0",
+    "bcrypt": "^5.0.1",
+    "bull": "^4.10.0",
+    "cache-manager": "4.1.0",
+    "cache-manager-ioredis": "^2.1.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.13.2",
+    "date-fns": "^2.29.3",
+    "dotenv-parse-variables": "^2.0.0",
+    "eventemitter2": "^6.4.9",
+    "ms": "^2.1.3",
+    "pg": "^8.8.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.0.0",
+    "tslib": "^2.3.0",
+    "typeorm": "^0.3.10",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.1.2",
+    "@commitlint/config-angular": "^17.1.0",
+    "@commitlint/config-conventional": "^17.1.0",
+    "@nestjs/schematics": "^9.0.0",
+    "@nestjs/testing": "^9.0.0",
+    "@nrwl/cli": "14.8.2",
+    "@nrwl/eslint-plugin-nx": "14.8.2",
+    "@nrwl/jest": "14.8.2",
+    "@nrwl/linter": "14.8.2",
+    "@nrwl/nest": "14.8.2",
+    "@nrwl/node": "14.8.2",
+    "@nrwl/nx-cloud": "latest",
+    "@nrwl/workspace": "14.8.2",
+    "@types/bcrypt": "^5.0.0",
+    "@types/bull": "^3.15.9",
+    "@types/cache-manager": "^4.0.2",
+    "@types/cache-manager-ioredis": "^2.0.2",
+    "@types/dotenv-parse-variables": "^2.0.1",
+    "@types/jest": "28.1.1",
+    "@types/node": "16.11.7",
+    "@typescript-eslint/eslint-plugin": "^5.36.1",
+    "@typescript-eslint/parser": "^5.36.1",
+    "eslint": "~8.15.0",
+    "eslint-config-prettier": "8.1.0",
+    "husky": "^8.0.1",
+    "jest": "28.1.1",
+    "jest-environment-jsdom": "28.1.1",
+    "lint-staged": "^13.0.3",
+    "nx": "14.8.2",
+    "prettier": "^2.6.2",
+    "sort-package-json": "^2.0.0",
+    "ts-jest": "28.0.5",
+    "ts-node": "10.9.1",
+    "typescript": "~4.8.2"
+  },
+  "engines": {
+    "node": "^14.9.3"
+  }
+}

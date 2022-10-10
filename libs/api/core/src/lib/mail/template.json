@@ -1,0 +1,8 @@
+{
+  "Template": {
+    "TemplateName": "EmailVerificationTemplate",
+    "SubjectPart": "Alex Huynh - Email Address Verification Request",
+    "HtmlPart": "<h1>Hello {{name}},</h1><p>We have received a request to authorize this email address. If you requested this verification, please go to the following URL to confirm that you are authorized to use this email address: {{urlVerification}}</p>",
+    "TextPart": "Dear {{name}},\r\nWe have received a request to authorize this email address. If you requested this verification, please go to the following URL to confirm that you are authorized to use this email address: {{urlVerification}}"
+  }
+}

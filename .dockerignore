@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+Dockerfile
+.dockerignore
+script
+.log*
+dist
+.env
+.vscode
+.next
+package-lock.json
