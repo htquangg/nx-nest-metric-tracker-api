@@ -1,6 +1,8 @@
-import { Entity, Column, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { Entity, Column, BeforeInsert, BeforeUpdate, OneToMany } from 'typeorm';
 import { Expose, Exclude } from 'class-transformer';
 import bcrypt from 'bcrypt';
+
+import { BodyVitalsLog } from './body-vitals-log.entity';
 
 import { EverfitBaseEntity } from '@everfit/api/common';
 
@@ -42,6 +44,21 @@ export class User extends EverfitBaseEntity {
   @Expose()
   @Column({ nullable: true })
   phone?: string;
+
+  @Exclude()
+  @Column({ name: 'last_sign_on', nullable: true })
+  lastSignOn?: Date;
+
+  @Exclude()
+  @Column({ name: 'last_vitals_log_one_month', nullable: true })
+  lastVitalsLogOneMonth?: unknown[];
+
+  @Exclude()
+  @Column({ name: 'last_vitals_log_two_months', nullable: true })
+  lastVitalsLogTwoMonths?: unknown[];
+
+  @OneToMany(() => BodyVitalsLog, (bodyVitalsLog) => bodyVitalsLog.user)
+  bodyVitalLogs: BodyVitalsLog[];
 
   @BeforeInsert()
   @BeforeUpdate()

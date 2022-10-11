@@ -3,18 +3,18 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   BaseEntity,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Expose, Exclude } from 'class-transformer';
 
 export abstract class EverfitBaseEntity extends BaseEntity {
   @Expose()
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   id: string;
 
   @Expose()
   @CreateDateColumn({ name: 'created_at' })
-  signedUpAt?: Date;
+  createdAt?: Date;
 
   @Exclude()
   @UpdateDateColumn({ name: 'modified_at' })
