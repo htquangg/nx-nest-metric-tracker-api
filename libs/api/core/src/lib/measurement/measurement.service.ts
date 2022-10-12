@@ -1,3 +1,4 @@
+import { AuthUserDto } from '@everfit/api/common';
 import { Injectable } from '@nestjs/common';
 
 import { BodyVitalsService } from '../body-vitals';
@@ -6,7 +7,9 @@ import { BodyVitalsService } from '../body-vitals';
 export class MeasurementService {
   constructor(protected readonly bodyVitalsService: BodyVitalsService) {}
 
-  async getBodyVitalsLog() {}
+  async getBodyVitalsLog(currentUser: AuthUserDto) {
+    return await this.bodyVitalsService.getDetailBodyVitals(currentUser.userId);
+  }
 
   async updateBodyVitalsLog() {}
 }
