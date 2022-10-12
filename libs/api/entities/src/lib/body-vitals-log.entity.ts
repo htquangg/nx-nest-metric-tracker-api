@@ -22,7 +22,6 @@ export class BodyVitalsLog extends EverfitBaseEntity {
     (_type) => BodyTemperature,
     (bodyTemperature) => bodyTemperature.bodyVitalsLog,
   )
-  @Column({ name: 'body_temperature' })
   bodyTemperature: BodyTemperature;
 
   @Expose()
@@ -30,7 +29,6 @@ export class BodyVitalsLog extends EverfitBaseEntity {
     (_type) => BodyDistance,
     (bodyDistance) => bodyDistance.bodyVitalsLog,
   )
-  @Column({ name: 'body_distance' })
   bodyDistance: BodyDistance;
 
   @ManyToOne(() => User, (user) => user.bodyVitalLogs)
