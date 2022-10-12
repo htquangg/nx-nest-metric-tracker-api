@@ -116,7 +116,7 @@ export class AuthService {
 
   async createAccessToken(user: User) {
     const payload = {
-      id: user.id,
+      userId: user.id,
       email: user.email,
       isActive: user.isActive,
     };

@@ -17,11 +17,12 @@ import {
 } from './dto';
 import { AuthService } from './auth.service';
 
-import { EmailThrottlerGuard } from '@everfit/api/common';
+import { EmailThrottlerGuard, Roles, USER_ROLES } from '@everfit/api/common';
 
 const THROTTLER_TTL_RESEND_VERIFICATION_EMAIL = 60 * 60 * 24; // one day
 const THROTTLER_LIMIT_RESEND_VERIFICATION_EMAIL = 2;
 
+@Roles(USER_ROLES.PUBLIC)
 @Controller('/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

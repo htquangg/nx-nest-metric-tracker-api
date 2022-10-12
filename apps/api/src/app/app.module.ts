@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 
@@ -12,11 +13,14 @@ import {
   postgresConfiguration,
   throttlerConfiguration,
 } from '@everfit/api/config';
-import { ApiCommonModule, EverfitThrottlerGuard } from '@everfit/api/common';
+import {
+  ApiCommonModule,
+  EverfitThrottlerGuard,
+  RolesGuard,
+} from '@everfit/api/common';
 import { ApiCoreModule } from '@everfit/api/core';
 import { ApiServicesModule } from '@everfit/api/services';
 import type { PostgresConfig, ThrottlerConfig } from '@everfit/api/types';
-import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -49,6 +53,10 @@ import { APP_GUARD } from '@nestjs/core';
     {
       provide: APP_GUARD,
       useClass: EverfitThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })

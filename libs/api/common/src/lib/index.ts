@@ -9,3 +9,5 @@ export * from './middlewares';
 export * from './interceptors';
 export * from './errors';
 export * from './guards';
+export * from './enums';
+export * from './decorators';

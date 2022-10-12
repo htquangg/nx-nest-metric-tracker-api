@@ -3,7 +3,7 @@ export abstract class BaseDto {
 
   updatedAt?: Date;
 
-  id: string;
+  userId: string;
 
   isActive: boolean;
 }

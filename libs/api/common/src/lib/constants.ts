@@ -9,3 +9,12 @@ export const ERROR_MESSAGES = {
   PASSWORD_INCORRECT: 'Incorrect password.',
   RATE_LIMIT_EXCEEDED: 'Rate limit exceeded. Please try again later.',
 };
+
+// export enum USER_ROLES {
+//   PUBLIC = 'b8013297-ad85-404c-a89e-dd7c715d461e',
+//   APP = 'cc5c0592-67ed-4237-a0d3-1551e547125b',
+// }
+export const USER_ROLES = {
+  PUBLIC: 'b8013297-ad85-404c-a89e-dd7c715d461e',
+  APP: 'cc5c0592-67ed-4237-a0d3-1551e547125b',
+} as const;

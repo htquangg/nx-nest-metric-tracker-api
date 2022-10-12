@@ -3,13 +3,13 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   BaseEntity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
 } from 'typeorm';
 import { Expose, Exclude } from 'class-transformer';
 
 export abstract class EverfitBaseEntity extends BaseEntity {
   @Expose()
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn()
   id: string;
 
   @Expose()
