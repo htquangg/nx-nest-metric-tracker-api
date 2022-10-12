@@ -2,10 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { AuthUserDto } from '../auth';
 import { BodyVitalsService } from '../body-vitals';
 
-import { EverfitBaseService } from '@everfit/api/common';
+import { AuthUserDto, EverfitBaseService } from '@everfit/api/common';
 import { CachingService } from '@everfit/api/services';
 import { User } from '@everfit/api/entities';
 import { randomStringGenerator } from '@everfit/shared/utils';
@@ -60,16 +59,16 @@ export class UserService extends EverfitBaseService<User> {
     );
   }
 
+  async getUserInformation(currentUser: AuthUserDto): Promise<User> {
+    return await this.getUserById(currentUser.userId);
+  }
+
   async createUser(params: Partial<User>) {
     const user = {
       ...params,
       id: randomStringGenerator(),
     };
     return (await this.save(this.create(user))) as User;
-  }
-
-  async getUserInformation(currentUser: AuthUserDto): Promise<User> {
-    return await this.getUserById(currentUser.userId);
   }
 
   async getBodyVitalsLog() {}
