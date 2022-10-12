@@ -19,14 +19,4 @@ export class UserController {
   async getCurrentUser(@CurrentUser() currentUser: AuthUserDto): Promise<User> {
     return await this.userService.getUserInformation(currentUser);
   }
-
-  @Get('/body-vitals')
-  async getBodyVitalsLog() {
-    return await this.userService.getBodyVitalsLog();
-  }
-
-  @Post('/body-vitals')
-  async updateBodyVitalsLog() {
-    return await this.userService.updateBodyVitalsLog();
-  }
 }

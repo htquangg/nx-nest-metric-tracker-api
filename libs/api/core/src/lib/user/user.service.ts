@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { BodyVitalsService } from '../body-vitals';
-
 import { AuthUserDto, EverfitBaseService } from '@everfit/api/common';
 import { CachingService } from '@everfit/api/services';
 import { User } from '@everfit/api/entities';
@@ -14,7 +12,6 @@ export class UserService extends EverfitBaseService<User> {
   constructor(
     @InjectRepository(User) protected readonly repository: Repository<User>,
     protected readonly cacheService: CachingService,
-    protected readonly bodyVitalsLogService: BodyVitalsService,
   ) {
     super(repository);
   }
@@ -70,8 +67,4 @@ export class UserService extends EverfitBaseService<User> {
     };
     return (await this.save(this.create(user))) as User;
   }
-
-  async getBodyVitalsLog() {}
-
-  async updateBodyVitalsLog() {}
 }
