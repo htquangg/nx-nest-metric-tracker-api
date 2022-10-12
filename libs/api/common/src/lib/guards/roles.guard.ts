@@ -1,13 +1,12 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 
 import { USER_ROLES } from '../constants';
-import { StrategyMethod } from '../enums';
 import { UserRolesType } from '../decorators';
 
 import { is } from '@everfit/shared/utils';
+import { JwtAuthGuard } from './jwt.guard';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -36,7 +35,7 @@ export class RolesGuard implements CanActivate {
           return true;
         }
         if (role.includes(USER_ROLES.APP)) {
-          return new (AuthGuard(StrategyMethod.JWT))().canActivate(context);
+          return await new JwtAuthGuard().canActivate(context);
         }
       }),
     );
