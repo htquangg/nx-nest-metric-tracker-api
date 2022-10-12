@@ -11,3 +11,4 @@ export * from './errors';
 export * from './guards';
 export * from './enums';
 export * from './decorators';
+export * from './dtos';
