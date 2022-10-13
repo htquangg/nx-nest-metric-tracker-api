@@ -10,7 +10,7 @@ import {
 import { is } from '@everfit/shared/utils';
 
 @Injectable()
-export class TasksService {
+export class LastVitalsLogCronJob {
   constructor(
     protected readonly userService: UserService,
     protected readonly bodyVitalsLogService: BodyVitalsService,
@@ -37,7 +37,7 @@ export class TasksService {
           }, []);
           await this.userService.save({
             ...user,
-            lastVitalsLogOneMonth: jsonData,
+            lastVitalsLogOneMonth: JSON.stringify(jsonData),
           });
         }
       });
@@ -65,7 +65,7 @@ export class TasksService {
           }, []);
           await this.userService.save({
             ...user,
-            lastVitalsLogTwoMonths: jsonData,
+            lastVitalsLogTwoMonths: JSON.stringify(jsonData),
           });
         }
       });
