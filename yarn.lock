@@ -949,6 +949,14 @@
     multer "1.4.4-lts.1"
     tslib "2.4.0"
 
+"@nestjs/schedule@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.npmjs.org/@nestjs/schedule/-/schedule-2.1.0.tgz#a2e21b2078a0c3d56552d40cc97336aa5bbfecdf"
+  integrity sha512-4Xaw56WiW3VsxEPPnj/iDtfjcO+sUZyYAeRxD0gnF5havncxjAnv52Iw7UH3DuzzUA784xPGgGje3Fq0Gu925g==
+  dependencies:
+    cron "2.0.0"
+    uuid "8.3.2"
+
 "@nestjs/schematics@^9.0.0":
   version "9.0.3"
   resolved "https://registry.npmjs.org/@nestjs/schematics/-/schematics-9.0.3.tgz#175218350fb3829c9a903e980046a11950310e24"
@@ -1378,6 +1386,14 @@
   dependencies:
     "@types/node" "*"
 
+"@types/cron@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/@types/cron/-/cron-2.0.0.tgz#4fe75f2720a3b69a1f7b80e656749f4c2c96d727"
+  integrity sha512-xZM08fqvwIXgghtPVkSPKNgC+JoMQ2OHazEvyTKnNf7aWu1aB6/4lBbQFrb03Td2cUGG7ITzMv3mFYnMu6xRaQ==
+  dependencies:
+    "@types/luxon" "*"
+    "@types/node" "*"
+
 "@types/dotenv-parse-variables@^2.0.1":
   version "2.0.1"
   resolved "https://registry.npmjs.org/@types/dotenv-parse-variables/-/dotenv-parse-variables-2.0.1.tgz#b0af93ee6c628e4da671acec5d287a8a269b492d"
@@ -1508,6 +1524,11 @@
   integrity sha512-zm6xBQpFDIDM6o9r6HSgDeIcLy82TKWctCXEPbJJcXb5AKmi5BNNdLXneixK4lplX3PqIVcwLBCGE/kAGnlD4A==
   dependencies:
     "@types/node" "*"
+
+"@types/luxon@*":
+  version "3.0.1"
+  resolved "https://registry.npmjs.org/@types/luxon/-/luxon-3.0.1.tgz#2b1657096473e24b049bdedf3710f99645f3a17f"
+  integrity sha512-/LAvk1cMOJt0ghzMFrZEvByUhsiEfeeT2IF53Le+Ki3A538yEL9pRZ7a6MuCxdrYK+YNqNIDmrKU/r2nnw04zQ==
 
 "@types/mime@*":
   version "3.0.1"
@@ -2940,6 +2961,13 @@ cron-parser@^4.2.1:
   integrity sha512-guZNLMGUgg6z4+eGhmHGw7ft+v6OQeuHzd1gcLxCo9Yg/qoxmG3nindp2/uwGCLizEisf2H0ptqeVXeoCpP6FA==
   dependencies:
     luxon "^3.0.1"
+
+cron@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/cron/-/cron-2.0.0.tgz#15c6bf37c1cebf6da1d7a688b9ba1c68338bfe6b"
+  integrity sha512-RPeRunBCFr/WEo7WLp8Jnm45F/ziGJiHVvVQEBSDTSGu6uHW49b2FOP2O14DcXlGJRLhwE7TIoDzHHK4KmlL6g==
+  dependencies:
+    luxon "^1.23.x"
 
 cross-spawn@^7.0.2, cross-spawn@^7.0.3:
   version "7.0.3"
@@ -5730,6 +5758,11 @@ lru-cache@^7.10.1:
   version "7.14.0"
   resolved "https://registry.npmjs.org/lru-cache/-/lru-cache-7.14.0.tgz#21be64954a4680e303a09e9468f880b98a0b3c7f"
   integrity sha512-EIRtP1GrSJny0dqb50QXRUNBxHJhcpxHC++M5tD7RYbvLLn5KVWKsbyswSSqDuU15UFi3bgTQIY8nhDMeF6aDQ==
+
+luxon@^1.23.x:
+  version "1.28.0"
+  resolved "https://registry.npmjs.org/luxon/-/luxon-1.28.0.tgz#e7f96daad3938c06a62de0fb027115d251251fbf"
+  integrity sha512-TfTiyvZhwBYM/7QdAVDh+7dBTBA29v4ik0Ce9zda3Mnf8on1S5KJI8P2jKFZ8+5C0jhmr0KwJEO/Wdpm0VeWJQ==
 
 luxon@^3.0.1:
   version "3.0.4"
