@@ -49,13 +49,13 @@ export class User extends EverfitBaseEntity {
   @Column({ name: 'last_sign_on', nullable: true })
   lastSignOn?: Date;
 
-  // @Exclude()
-  // @Column({ name: 'last_vitals_log_one_month', nullable: true })
-  // lastVitalsLogOneMonth?: BodyVitalsLog[];
-  //
-  // @Exclude()
-  // @Column({ name: 'last_vitals_log_two_months', nullable: true })
-  // lastVitalsLogTwoMonths?: BodyVitalsLog[];
+  @Exclude()
+  @Column({ name: 'last_vitals_log_one_month', nullable: true })
+  lastVitalsLogOneMonth?: string;
+
+  @Exclude()
+  @Column({ name: 'last_vitals_log_two_months', nullable: true })
+  lastVitalsLogTwoMonths?: string;
   //
   @OneToMany(() => BodyVitalsLog, (bodyVitalsLog) => bodyVitalsLog.user)
   bodyVitalLogs: BodyVitalsLog[];

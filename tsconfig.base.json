@@ -23,6 +23,9 @@
       "@everfit/api/services": ["libs/api/services/src/index.ts"],
       "@everfit/api/types": ["libs/api/types/src/index.ts"],
       "@everfit/background/common": ["libs/background/common/src/index.ts"],
+      "@everfit/background/last-vitals-log-job": [
+        "libs/background/last-vitals-log-job/src/index.ts"
+      ],
       "@everfit/background/mail-job": ["libs/background/mail-job/src/index.ts"],
       "@everfit/shared/utils": ["libs/shared/utils/src/index.ts"]
     }
