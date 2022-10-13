@@ -32,23 +32,21 @@ export class DistanceService extends EverfitBaseService<BodyDistance> {
     bodyVitalsLogId: string,
     transaction?: EntityManager,
   ): Promise<BodyDistance> {
-    const bodyVitalsLog = await this.repository.findOne({
+    const bodyDistance = await this.repository.findOne({
       where: {
         bodyVitalsLogId,
         createdAt: BetweenOneDay,
       },
-      relations: ['bodyDistance', 'bodyTemperature'],
+      relations: ['bodyVitalsLog'],
     });
 
-    if (is.nil(bodyVitalsLog)) {
+    if (is.nil(bodyDistance)) {
       const measurementUnit = await this.measurementUnitRepository.findOne({
         where: { symbol: DEFAULT_DISTANCE_UNIT },
       });
 
       if (is.nil(measurementUnit)) {
-        throw new InternalServerErrorException(
-          'Distance Unit is not definded!',
-        );
+        throw new InternalServerErrorException('DistanceUnit is not definded!');
       }
 
       const payload: BodyDistanceProps = {
@@ -62,7 +60,7 @@ export class DistanceService extends EverfitBaseService<BodyDistance> {
       return (await this.save(this.create(payload))) as BodyDistance;
     }
 
-    return bodyVitalsLog;
+    return bodyDistance;
   }
 
   async upsertDetailBodyDistance(
@@ -80,7 +78,7 @@ export class DistanceService extends EverfitBaseService<BodyDistance> {
         measurementUnit,
         is.notNil,
         new InternalServerErrorException(
-          `Distance Unit is not definded: ${measurementUnit}`,
+          `DistanceUnit is not definded: ${measurementUnit}`,
         ),
       );
 
@@ -118,13 +116,17 @@ export class DistanceService extends EverfitBaseService<BodyDistance> {
       ),
     );
 
+    // create new payload
+    // TOIMPROVE: json builder data
+    delete bodyDistance.jsonData;
     const newBodyDistance: EntityProps<BodyDistance> = {
       ...bodyDistance,
       distance: bodyDistance.distance * exchangeRate.rate + data.value,
       measurementUnitId: targetMeasurementUnit.id,
     };
+    const jsonData = JSON.stringify(newBodyDistance);
 
-    await this.save(newBodyDistance);
+    await this.save({ ...newBodyDistance, jsonData });
 
     return newBodyDistance as BodyDistance;
   }

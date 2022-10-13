@@ -5,6 +5,7 @@ import { getManager, Repository } from 'typeorm';
 import { DistanceService } from './distance';
 import { BetweenOneDay } from '../utils';
 import { UpsertBodyVitalsDto } from '../measurement';
+import { TemperatureService } from './temperature';
 
 import { EverfitBaseService } from '@everfit/api/common';
 import { BodyVitalsLog, BodyVitalsLogProps } from '@everfit/api/entities';
@@ -19,6 +20,7 @@ export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
     protected readonly repository: Repository<BodyVitalsLog>,
     @InjectPostgresConfig() protected readonly postgresConfig: PostgresConfig,
     protected readonly distanceService: DistanceService,
+    protected readonly temperatureService: TemperatureService,
   ) {
     super(repository);
   }
@@ -54,11 +56,31 @@ export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
 
     await getManager(this.postgresConfig.database).transaction(
       async (transaction) => {
-        await this.distanceService.upsertDetailBodyDistance(
-          bodyVitalsLog.id,
-          data.distance,
-          transaction,
-        );
+        const bodyDistance =
+          await this.distanceService.upsertDetailBodyDistance(
+            bodyVitalsLog.id,
+            data.distance,
+            transaction,
+          );
+        const bodyTemperature =
+          await this.temperatureService.upsertDetailBodyTemperature(
+            bodyVitalsLog.id,
+            data.temperature,
+            transaction,
+          );
+
+        // create new payload
+        // TOIMPROVE: json builder data
+        delete bodyVitalsLog.jsonData;
+        const newBodyVitalsLog = {
+          ...bodyVitalsLog,
+        };
+        const jsonData = JSON.stringify({
+          distance: bodyDistance.jsonData,
+          temperature: bodyTemperature.jsonData,
+        });
+
+        return { ...newBodyVitalsLog, jsonData };
       },
     );
 
