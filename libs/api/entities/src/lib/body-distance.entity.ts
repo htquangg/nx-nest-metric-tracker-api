@@ -3,13 +3,15 @@ import { Expose, Exclude } from 'class-transformer';
 
 import { BodyVitalsLog } from './body-vitals-log.entity';
 
-import { EverfitBaseEntity } from '@everfit/api/common';
+import { EntityProps, EverfitBaseEntity } from '@everfit/api/common';
+
+export type BodyDistanceProps = EntityProps<BodyDistance>;
 
 @Entity({ name: 'BodyDistance' })
 export class BodyDistance extends EverfitBaseEntity {
   @Exclude()
   @Column({ name: 'body_vitals_log_id' })
-  bodyVitalsLogId: number;
+  bodyVitalsLogId: string;
 
   @Expose()
   @Column()
@@ -17,7 +19,7 @@ export class BodyDistance extends EverfitBaseEntity {
 
   @Expose()
   @Column({ name: 'measurement_unit_id' })
-  measurementUnitId: number;
+  measurementUnitId: string;
 
   @Exclude()
   @Column({ name: 'json_data', nullable: true })
@@ -26,5 +28,5 @@ export class BodyDistance extends EverfitBaseEntity {
   @OneToOne((_type) => BodyVitalsLog)
   @JoinTable({ name: 'BodyVitalsLog' })
   @JoinColumn({ name: 'body_vitals_log_id' })
-  bodyVitalsLog: BodyVitalsLog;
+  bodyVitalsLog?: BodyVitalsLog;
 }

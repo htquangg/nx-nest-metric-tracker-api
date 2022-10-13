@@ -1,7 +1,9 @@
 import { Entity, Column } from 'typeorm';
 import { Expose } from 'class-transformer';
 
-import { EverfitBaseEntity } from '@everfit/api/common';
+import { EntityProps, EverfitBaseEntity } from '@everfit/api/common';
+
+export type MeasurementUnitProps = EntityProps<MeasurementUnit>;
 
 @Entity({ name: 'MeasurementUnit' })
 export class MeasurementUnit extends EverfitBaseEntity {
@@ -15,5 +17,5 @@ export class MeasurementUnit extends EverfitBaseEntity {
 
   @Expose()
   @Column()
-  symbol: number;
+  symbol: string;
 }

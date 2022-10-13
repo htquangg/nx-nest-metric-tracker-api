@@ -1,5 +1,6 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 
+import { UpsertBodyVitalsDto } from './dtos';
 import { MeasurementService } from './measurement.service';
 
 import {
@@ -20,7 +21,10 @@ export class MeasurementController {
   }
 
   @Post('/body-vitals')
-  async updateBodyVitalsLog() {
-    return await this.measurementService.updateBodyVitalsLog();
+  async updateBodyVitalsLog(
+    @CurrentUser() currentUser: AuthUserDto,
+    @Body() body: UpsertBodyVitalsDto,
+  ) {
+    return await this.measurementService.upsertBodyVitalsLog(currentUser, body);
   }
 }
