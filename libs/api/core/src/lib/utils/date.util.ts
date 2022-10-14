@@ -11,6 +11,6 @@ export const lastTwoMonths = startOfDay(subDays(startDayNow, 60));
 
 export const BetweenOneDay = Between(startDayNow, endDayNow);
 
-export const BetweenOneMonth = Between(startDayNow, lastOneMonth);
+export const BetweenOneMonth = Between(lastOneMonth, endDayNow);
 
-export const BetweenTwoMonths = Between(startDayNow, lastTwoMonths);
+export const BetweenTwoMonths = Between(lastTwoMonths, endDayNow);
