@@ -14,7 +14,7 @@ import {
   SignInDto,
   VerificationEmailDto,
   VerificationEmailQueryDto,
-} from './dto';
+} from './dtos';
 import { AuthService } from './auth.service';
 
 import { EmailThrottlerGuard, Roles, USER_ROLES } from '@everfit/api/common';

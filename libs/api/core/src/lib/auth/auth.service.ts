@@ -15,7 +15,7 @@ import {
   VerificationEmailDto,
   TokenResultDto,
   VerificationEmailQueryDto,
-} from './dto';
+} from './dtos';
 import { AuthEvents } from './constants';
 import { UserService } from '../user';
 
