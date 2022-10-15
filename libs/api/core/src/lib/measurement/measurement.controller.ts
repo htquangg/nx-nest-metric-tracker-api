@@ -21,7 +21,7 @@ export class MeasurementController {
   }
 
   @Post('/body-vitals')
-  async updateBodyVitalsLog(
+  async upsertBodyVitalsLog(
     @CurrentUser() currentUser: AuthUserDto,
     @Body() body: UpsertBodyVitalsDto,
   ) {
