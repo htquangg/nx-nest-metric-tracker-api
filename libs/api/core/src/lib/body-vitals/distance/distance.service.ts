@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
 
-import { Distance } from '../../measurement';
+import { DistanceDto } from '../dtos';
 import { BetweenOneDay } from '../../utils';
 import { DEFAULT_DISTANCE_UNIT, DEFAULT_DISTANCE_VALUE } from '../../constants';
 
@@ -65,7 +65,7 @@ export class DistanceService extends EverfitBaseService<BodyDistance> {
 
   async upsertDetailBodyDistance(
     bodyVitalsLogId: string,
-    data: Distance,
+    data: DistanceDto,
     transaction?: EntityManager,
   ): Promise<BodyDistance> {
     const bodyDistance = await this.getDetailBodyDistance(bodyVitalsLogId);

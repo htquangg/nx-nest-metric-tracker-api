@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
 import { BetweenOneDay } from '../../utils';
-import { Temperature } from '../../measurement';
+import { TemperatureDto } from '../dtos';
 import {
   DEFAULT_TEMPERATURE_UNIT,
   DEFAULT_TEMPERATURE_VALUE,
@@ -70,7 +70,7 @@ export class TemperatureService extends EverfitBaseService<BodyTemperature> {
 
   async upsertDetailBodyTemperature(
     bodyVitalsLogId: string,
-    data: Temperature,
+    data: TemperatureDto,
     transaction?: EntityManager,
   ): Promise<BodyTemperature> {
     const bodyTemperature = await this.getDetailBodyTemperature(

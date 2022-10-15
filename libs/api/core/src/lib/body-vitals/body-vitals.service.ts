@@ -4,10 +4,10 @@ import { getManager, Repository } from 'typeorm';
 
 import { DistanceService } from './distance';
 import { BetweenOneDay } from '../utils';
-import { UpsertBodyVitalsDto } from '../measurement';
+import { UpsertBodyVitalsDto } from './dtos';
 import { TemperatureService } from './temperature';
 
-import { EverfitBaseService } from '@everfit/api/common';
+import { AuthUserDto, EverfitBaseService } from '@everfit/api/common';
 import { BodyVitalsLog, BodyVitalsLogProps } from '@everfit/api/entities';
 import { is, randomStringGenerator } from '@everfit/shared/utils';
 import { InjectPostgresConfig } from '@everfit/api/config';
@@ -23,6 +23,17 @@ export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
     protected readonly temperatureService: TemperatureService,
   ) {
     super(repository);
+  }
+
+  async getBodyVitalsLog(currentUser: AuthUserDto) {
+    return await this.getDetailBodyVitals(currentUser.userId);
+  }
+
+  async upsertBodyVitalsLog(
+    currentUser: AuthUserDto,
+    data: UpsertBodyVitalsDto,
+  ) {
+    return await this.upsertDetailBodyVitals(currentUser.userId, data);
   }
 
   async getDetailBodyVitals(userId: string): Promise<BodyVitalsLog> {

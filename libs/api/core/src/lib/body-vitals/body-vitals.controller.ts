@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 
-import { UpsertBodyVitalsDto } from './dtos';
-import { MeasurementService } from './measurement.service';
+import { GetBodyVitalsDto } from './dtos';
+import { BodyVitalsService } from './body-vitals.service';
 
 import {
   AuthUserDto,
@@ -12,19 +12,19 @@ import {
 
 @Controller('/measurement')
 @Roles(USER_ROLES.APP)
-export class MeasurementController {
-  constructor(private readonly measurementService: MeasurementService) {}
+export class BodyVitalsController {
+  constructor(protected readonly bodyVitalsService: BodyVitalsService) {}
 
   @Get('/body-vitals')
   async getBodyVitalsLog(@CurrentUser() currentUser: AuthUserDto) {
-    return await this.measurementService.getBodyVitalsLog(currentUser);
+    return await this.bodyVitalsService.getBodyVitalsLog(currentUser);
   }
 
   @Post('/body-vitals')
   async upsertBodyVitalsLog(
     @CurrentUser() currentUser: AuthUserDto,
-    @Body() body: UpsertBodyVitalsDto,
+    @Body() body: GetBodyVitalsDto,
   ) {
-    return await this.measurementService.upsertBodyVitalsLog(currentUser, body);
+    return await this.bodyVitalsService.upsertBodyVitalsLog(currentUser, body);
   }
 }
