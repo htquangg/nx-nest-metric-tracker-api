@@ -13,20 +13,19 @@ import { EntityProps, EverfitBaseService } from '@everfit/api/common';
 import {
   BodyTemperature,
   BodyTemperatureProps,
-  MeasurementUnit,
-  ExchangeRate,
+  ENTITY_NAME,
 } from '@everfit/api/entities';
 import { is, check, randomStringGenerator } from '@everfit/shared/utils';
+import { MeasurementUnitService } from '../../measurement-unit';
+import { ExchangeRateService } from '../../exchange-rate';
 
 @Injectable()
 export class TemperatureService extends EverfitBaseService<BodyTemperature> {
   constructor(
     @InjectRepository(BodyTemperature)
     protected readonly repository: Repository<BodyTemperature>,
-    @InjectRepository(MeasurementUnit)
-    protected readonly measurementUnitRepository: Repository<MeasurementUnit>,
-    @InjectRepository(ExchangeRate)
-    protected readonly exchangeRateRepository: Repository<ExchangeRate>,
+    protected readonly measurementUnitService: MeasurementUnitService,
+    protected readonly exchangeRateService: ExchangeRateService,
   ) {
     super(repository);
   }
@@ -40,11 +39,11 @@ export class TemperatureService extends EverfitBaseService<BodyTemperature> {
         bodyVitalsLogId,
         createdAt: BetweenOneDay,
       },
-      relations: ['bodyVitalsLog'],
+      relations: [ENTITY_NAME.BODY_VITALS_LOG],
     });
 
     if (is.nil(bodyTemperature)) {
-      const measurementUnit = await this.measurementUnitRepository.findOne({
+      const measurementUnit = await this.measurementUnitService.findOne({
         where: { symbol: DEFAULT_TEMPERATURE_UNIT },
       });
 
@@ -78,7 +77,7 @@ export class TemperatureService extends EverfitBaseService<BodyTemperature> {
     );
 
     if (bodyTemperature.temperature === DEFAULT_TEMPERATURE_VALUE) {
-      const measurementUnit = await this.measurementUnitRepository.findOne({
+      const measurementUnit = await this.measurementUnitService.findOne({
         where: { symbol: data.unit as unknown as string },
       });
       check(
@@ -98,10 +97,10 @@ export class TemperatureService extends EverfitBaseService<BodyTemperature> {
       return (await this.save(this.create(payload))) as BodyTemperature;
     }
 
-    const sourceMeasurementUnit = await this.measurementUnitRepository.findOne({
+    const sourceMeasurementUnit = await this.measurementUnitService.findOne({
       where: { id: bodyTemperature.measurementUnitId },
     });
-    const targetMeasurementUnit = await this.measurementUnitRepository.findOne({
+    const targetMeasurementUnit = await this.measurementUnitService.findOne({
       where: { symbol: data.unit as unknown as string },
     });
     check(
@@ -112,7 +111,7 @@ export class TemperatureService extends EverfitBaseService<BodyTemperature> {
       ),
     );
 
-    const exchangeRate = await this.exchangeRateRepository.findOne({
+    const exchangeRate = await this.exchangeRateService.findOne({
       where: { source: sourceMeasurementUnit.id, to: targetMeasurementUnit.id },
     });
     check(

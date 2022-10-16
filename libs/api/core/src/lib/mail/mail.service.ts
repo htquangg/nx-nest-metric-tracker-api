@@ -3,7 +3,7 @@ import AWS from 'aws-sdk';
 
 import { InjectMailConfig } from '@everfit/api/config';
 import { MailConfig } from '@everfit/api/types';
-import { SendInvitationDto } from './dto';
+import { SendInvitationDto } from './dtos';
 
 @Injectable()
 export class MailService {

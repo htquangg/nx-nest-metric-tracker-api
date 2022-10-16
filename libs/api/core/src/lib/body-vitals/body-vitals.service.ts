@@ -2,13 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 
+import { GetBodyVitalsDto, UpsertBodyVitalsDto } from './dtos';
+import { TemperatureService } from './temperature';
 import { DistanceService } from './distance';
 import { BetweenOneDay } from '../utils';
-import { UpsertBodyVitalsDto } from './dtos';
-import { TemperatureService } from './temperature';
 
 import { AuthUserDto, EverfitBaseService } from '@everfit/api/common';
-import { BodyVitalsLog, BodyVitalsLogProps } from '@everfit/api/entities';
+import {
+  BodyVitalsLog,
+  BodyVitalsLogProps,
+  ENTITY_NAME,
+} from '@everfit/api/entities';
 import { is, randomStringGenerator } from '@everfit/shared/utils';
 import { InjectPostgresConfig } from '@everfit/api/config';
 import { PostgresConfig } from '@everfit/api/types';
@@ -16,17 +20,20 @@ import { PostgresConfig } from '@everfit/api/types';
 @Injectable()
 export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
   constructor(
+    @InjectPostgresConfig() protected readonly postgresConfig: PostgresConfig,
     @InjectRepository(BodyVitalsLog)
     protected readonly repository: Repository<BodyVitalsLog>,
-    @InjectPostgresConfig() protected readonly postgresConfig: PostgresConfig,
     protected readonly distanceService: DistanceService,
     protected readonly temperatureService: TemperatureService,
   ) {
     super(repository);
   }
 
-  async getBodyVitalsLog(currentUser: AuthUserDto) {
-    return await this.getDetailBodyVitals(currentUser.userId);
+  async getBodyVitalsLog(
+    currentUser: AuthUserDto,
+    data?: GetBodyVitalsDto,
+  ): Promise<BodyVitalsLog> {
+    return await this.getDetailBodyVitals(currentUser.userId, data);
   }
 
   async upsertBodyVitalsLog(
@@ -36,13 +43,16 @@ export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
     return await this.upsertDetailBodyVitals(currentUser.userId, data);
   }
 
-  async getDetailBodyVitals(userId: string): Promise<BodyVitalsLog> {
+  async getDetailBodyVitals(
+    userId: string,
+    data?: GetBodyVitalsDto,
+  ): Promise<BodyVitalsLog> {
     const bodyVitalsLog = await this.repository.findOne({
       where: {
         userId,
         createdAt: BetweenOneDay,
       },
-      relations: ['bodyDistance', 'bodyTemperature'],
+      relations: [ENTITY_NAME.BODY_DISTANCE, ENTITY_NAME.BODY_TEMPERATURE],
     });
 
     if (is.nil(bodyVitalsLog)) {

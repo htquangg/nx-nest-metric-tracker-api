@@ -5,13 +5,14 @@ import { Repository, EntityManager } from 'typeorm';
 import { DistanceDto } from '../dtos';
 import { BetweenOneDay } from '../../utils';
 import { DEFAULT_DISTANCE_UNIT, DEFAULT_DISTANCE_VALUE } from '../../constants';
+import { MeasurementUnitService } from '../../measurement-unit';
+import { ExchangeRateService } from '../../exchange-rate';
 
 import { EntityProps, EverfitBaseService } from '@everfit/api/common';
 import {
   BodyDistance,
   BodyDistanceProps,
-  ExchangeRate,
-  MeasurementUnit,
+  ENTITY_NAME,
 } from '@everfit/api/entities';
 import { is, check, randomStringGenerator } from '@everfit/shared/utils';
 
@@ -20,10 +21,8 @@ export class DistanceService extends EverfitBaseService<BodyDistance> {
   constructor(
     @InjectRepository(BodyDistance)
     protected readonly repository: Repository<BodyDistance>,
-    @InjectRepository(MeasurementUnit)
-    protected readonly measurementUnitRepository: Repository<MeasurementUnit>,
-    @InjectRepository(ExchangeRate)
-    protected readonly exchangeRateRepository: Repository<ExchangeRate>,
+    protected readonly measurementUnitService: MeasurementUnitService,
+    protected readonly exchangeRateService: ExchangeRateService,
   ) {
     super(repository);
   }
@@ -37,11 +36,11 @@ export class DistanceService extends EverfitBaseService<BodyDistance> {
         bodyVitalsLogId,
         createdAt: BetweenOneDay,
       },
-      relations: ['bodyVitalsLog'],
+      relations: [ENTITY_NAME.BODY_VITALS_LOG],
     });
 
     if (is.nil(bodyDistance)) {
-      const measurementUnit = await this.measurementUnitRepository.findOne({
+      const measurementUnit = await this.measurementUnitService.findOne({
         where: { symbol: DEFAULT_DISTANCE_UNIT },
       });
 
@@ -71,7 +70,7 @@ export class DistanceService extends EverfitBaseService<BodyDistance> {
     const bodyDistance = await this.getDetailBodyDistance(bodyVitalsLogId);
 
     if (bodyDistance.distance === DEFAULT_DISTANCE_VALUE) {
-      const measurementUnit = await this.measurementUnitRepository.findOne({
+      const measurementUnit = await this.measurementUnitService.findOne({
         where: { symbol: data.unit as unknown as string },
       });
       check(
@@ -91,10 +90,10 @@ export class DistanceService extends EverfitBaseService<BodyDistance> {
       return (await this.save(this.create(payload))) as BodyDistance;
     }
 
-    const sourceMeasurementUnit = await this.measurementUnitRepository.findOne({
+    const sourceMeasurementUnit = await this.measurementUnitService.findOne({
       where: { id: bodyDistance.measurementUnitId },
     });
-    const targetMeasurementUnit = await this.measurementUnitRepository.findOne({
+    const targetMeasurementUnit = await this.measurementUnitService.findOne({
       where: { symbol: data.unit as unknown as string },
     });
     check(
@@ -105,7 +104,7 @@ export class DistanceService extends EverfitBaseService<BodyDistance> {
       ),
     );
 
-    const exchangeRate = await this.exchangeRateRepository.findOne({
+    const exchangeRate = await this.exchangeRateService.findOne({
       where: { source: sourceMeasurementUnit.id, to: targetMeasurementUnit.id },
     });
     check(
