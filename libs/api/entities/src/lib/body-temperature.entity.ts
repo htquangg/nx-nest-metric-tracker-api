@@ -2,12 +2,13 @@ import { Entity, Column, OneToOne, JoinColumn, JoinTable } from 'typeorm';
 import { Expose, Exclude } from 'class-transformer';
 
 import { BodyVitalsLog } from './body-vitals-log.entity';
+import { ENTITY_NAME } from '../constants';
 
 import { EntityProps, EverfitBaseEntity } from '@everfit/api/common';
 
 export type BodyTemperatureProps = EntityProps<BodyTemperature>;
 
-@Entity({ name: 'BodyTemperature' })
+@Entity({ name: ENTITY_NAME.BODY_TEMPERATURE })
 export class BodyTemperature extends EverfitBaseEntity {
   @Exclude()
   @Column({ name: 'body_vitals_log_id' })

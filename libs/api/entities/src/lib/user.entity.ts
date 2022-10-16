@@ -3,10 +3,11 @@ import { Expose, Exclude } from 'class-transformer';
 import bcrypt from 'bcrypt';
 
 import { BodyVitalsLog } from './body-vitals-log.entity';
+import { ENTITY_NAME } from '../constants';
 
 import { EverfitBaseEntity } from '@everfit/api/common';
 
-@Entity({ name: 'User' })
+@Entity({ name: ENTITY_NAME.USER })
 export class User extends EverfitBaseEntity {
   constructor(partial: Partial<User>) {
     super();

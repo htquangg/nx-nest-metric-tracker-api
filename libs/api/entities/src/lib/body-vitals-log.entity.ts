@@ -4,12 +4,13 @@ import { Expose } from 'class-transformer';
 import { User } from './user.entity';
 import { BodyTemperature } from './body-temperature.entity';
 import { BodyDistance } from './body-distance.entity';
+import { ENTITY_NAME } from '../constants';
 
 import { EntityProps, EverfitBaseEntity } from '@everfit/api/common';
 
 export type BodyVitalsLogProps = EntityProps<BodyVitalsLog>;
 
-@Entity({ name: 'BodyVitalsLog' })
+@Entity({ name: ENTITY_NAME.BODY_VITALS_LOG })
 export class BodyVitalsLog extends EverfitBaseEntity {
   @Expose()
   @Column({ name: 'user_id' })
