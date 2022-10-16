@@ -57,7 +57,7 @@ export class User extends EverfitBaseEntity {
   @Exclude()
   @Column({ name: 'last_vitals_log_two_months', nullable: true })
   lastVitalsLogTwoMonths?: string;
-  //
+
   @OneToMany(() => BodyVitalsLog, (bodyVitalsLog) => bodyVitalsLog.user)
   bodyVitalLogs: BodyVitalsLog[];
 

@@ -1,12 +1,11 @@
-import { Entity, Column, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, OneToMany, JoinColumn, ManyToOne } from 'typeorm';
 import { Expose } from 'class-transformer';
 
 import { User } from './user.entity';
-import { BodyTemperature } from './body-temperature.entity';
-import { BodyDistance } from './body-distance.entity';
 import { ENTITY_NAME } from '../constants';
 
 import { EntityProps, EverfitBaseEntity } from '@everfit/api/common';
+import { BodyVitalsDetailsLog } from './body-vitals-details-log.entity';
 
 export type BodyVitalsLogProps = EntityProps<BodyVitalsLog>;
 
@@ -20,19 +19,13 @@ export class BodyVitalsLog extends EverfitBaseEntity {
   @Column({ name: 'json_data', nullable: true })
   jsonData?: string;
 
-  @OneToOne(
-    (_type) => BodyTemperature,
-    (bodyTemperature) => bodyTemperature.bodyVitalsLog,
-  )
-  bodyTemperature?: BodyTemperature;
-
-  @OneToOne(
-    (_type) => BodyDistance,
-    (bodyDistance) => bodyDistance.bodyVitalsLog,
-  )
-  bodyDistance?: BodyDistance;
-
   @ManyToOne(() => User, (user) => user.bodyVitalLogs)
   @JoinColumn({ name: 'user_id' })
   user?: User;
+
+  @OneToMany(
+    () => BodyVitalsDetailsLog,
+    (bodyVitalsDetailsLog) => bodyVitalsDetailsLog.bodyVitalsLog,
+  )
+  bodyVitalDetailsLogs: BodyVitalsDetailsLog[];
 }
