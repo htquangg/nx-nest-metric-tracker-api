@@ -13,10 +13,6 @@ export type BodyVitalsDetailsLogProps = EntityProps<BodyVitalsDetailsLog>;
 @Entity({ name: ENTITY_NAME.BODY_VITALS_DETAILS_LOG })
 export class BodyVitalsDetailsLog extends EverfitBaseEntity {
   @Expose()
-  @Column({ name: 'user_id' })
-  userId: string;
-
-  @Expose()
   @Column({ name: 'body_vitals_log_id' })
   bodyVitalsLogId: string;
 

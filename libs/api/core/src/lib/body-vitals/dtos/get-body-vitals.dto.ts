@@ -1,8 +1,19 @@
-import { IsEnum, IsOptional } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+
 import { DistanceUnit, TemperatureUnit } from '../../constants';
 import { DistanceUnitType, TemperatureUnitType } from '../../types';
 
-export class GetBodyVitalsDto {
+export class GetBodyVitalsParamsDto {
+  @IsOptional()
+  @IsString()
+  bodyVitalsId?: string;
+
+  @IsOptional()
+  @IsString()
+  bodyVitalsDetailsId?: string;
+}
+
+export class GetBodyVitalsQueryDto {
   @IsOptional()
   @IsEnum(DistanceUnit)
   distanceUnit?: DistanceUnitType;
@@ -11,3 +22,7 @@ export class GetBodyVitalsDto {
   @IsEnum(TemperatureUnit)
   temperatureUnit?: TemperatureUnitType;
 }
+
+export interface GetBodyVitalsPayload
+  extends GetBodyVitalsParamsDto,
+    GetBodyVitalsQueryDto {}

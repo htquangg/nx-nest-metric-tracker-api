@@ -18,6 +18,6 @@ export class MeasurementUnit extends EverfitBaseEntity {
   name: string;
 
   @Expose()
-  @Column()
+  @Column({ unique: true })
   symbol: string;
 }

@@ -24,7 +24,7 @@ export class LastVitalsLogCronJob {
         const bodyVitalsLogs = await this.bodyVitalsLogService.find({
           where: {
             userId: user.id,
-            createdAt: BetweenOneMonth,
+            createdAt: BetweenOneMonth as any,
           },
         });
 
@@ -52,7 +52,7 @@ export class LastVitalsLogCronJob {
         const bodyVitalsLogs = await this.bodyVitalsLogService.find({
           where: {
             userId: user.id,
-            createdAt: BetweenTwoMonths,
+            createdAt: BetweenTwoMonths as any,
           },
         });
 

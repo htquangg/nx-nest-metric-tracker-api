@@ -2,22 +2,14 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { BetweenOneDay } from '../../utils';
 import { TemperatureDto } from '../dtos';
-import {
-  DEFAULT_TEMPERATURE_UNIT,
-  DEFAULT_TEMPERATURE_VALUE,
-} from '../../constants';
-
-import { EntityProps, EverfitBaseService } from '@everfit/api/common';
-import {
-  BodyTemperature,
-  BodyTemperatureProps,
-  ENTITY_NAME,
-} from '@everfit/api/entities';
-import { is, check, randomStringGenerator } from '@everfit/shared/utils';
 import { MeasurementUnitService } from '../../measurement-unit';
 import { ExchangeRateService } from '../../exchange-rate';
+
+import { EntityProps, EverfitBaseService } from '@everfit/api/common';
+import { BodyTemperature, BodyTemperatureProps } from '@everfit/api/entities';
+import { is, check, randomStringGenerator } from '@everfit/shared/utils';
+import { DEFAULT_TEMPERATURE_UNIT } from '../../constants';
 
 @Injectable()
 export class TemperatureService extends EverfitBaseService<BodyTemperature> {
@@ -30,110 +22,87 @@ export class TemperatureService extends EverfitBaseService<BodyTemperature> {
     super(repository);
   }
 
-  async getDetailBodyTemperature(
-    bodyVitalsLogId: string,
+  async findOneByBodyVitalsDetailsLogId(
+    bodyVitalsDetailsLogId: string,
     transaction?: EntityManager,
   ): Promise<BodyTemperature> {
-    const bodyTemperature = await this.repository.findOne({
-      where: {
-        bodyVitalsLogId,
-        createdAt: BetweenOneDay,
-      },
-      relations: [ENTITY_NAME.BODY_VITALS_LOG],
-    });
-
-    if (is.nil(bodyTemperature)) {
-      const measurementUnit = await this.measurementUnitService.findOne({
-        where: { symbol: DEFAULT_TEMPERATURE_UNIT },
-      });
-
-      if (is.nil(measurementUnit)) {
-        throw new InternalServerErrorException(
-          'TemperatureUnit is not definded!',
-        );
-      }
-
-      const payload: BodyTemperatureProps = {
-        id: randomStringGenerator(),
-        bodyVitalsLogId,
-        temperature: DEFAULT_TEMPERATURE_VALUE,
-        measurementUnitId: measurementUnit.id,
-        jsonData: null,
-      };
-
-      return (await this.save(this.create(payload))) as BodyTemperature;
-    }
-
-    return bodyTemperature;
+    return await this.repository.findOneBy({ bodyVitalsDetailsLogId });
   }
 
-  async upsertDetailBodyTemperature(
-    bodyVitalsLogId: string,
-    data: TemperatureDto,
+  async upsert(
+    data: Partial<BodyTemperatureProps> &
+      TemperatureDto & { bodyVitalsDetailsLogId: string },
     transaction?: EntityManager,
   ): Promise<BodyTemperature> {
-    const bodyTemperature = await this.getDetailBodyTemperature(
-      bodyVitalsLogId,
+    const { bodyVitalsDetailsLogId, ...restData } = data;
+    const bodyTemperature = await this.findOneByBodyVitalsDetailsLogId(
+      bodyVitalsDetailsLogId,
     );
 
-    if (bodyTemperature.temperature === DEFAULT_TEMPERATURE_VALUE) {
-      const measurementUnit = await this.measurementUnitService.findOne({
-        where: { symbol: data.unit as unknown as string },
-      });
+    if (is.nil(bodyTemperature)) {
+      const sourceMeasurementUnit =
+        await this.measurementUnitService.getOneBySymbol(
+          restData.unit as unknown as string,
+        );
+      const defaultMeasurementUnit =
+        await this.measurementUnitService.getDefaultTemperatureUnit();
       check(
-        measurementUnit,
+        [sourceMeasurementUnit, defaultMeasurementUnit],
         is.notNil,
         new InternalServerErrorException(
-          `TemperatureUnit is not definded: ${measurementUnit}`,
+          `TemperatureUnit is not definded: ${sourceMeasurementUnit} -- ${defaultMeasurementUnit}`,
         ),
       );
 
-      const payload = {
-        ...bodyTemperature,
-        temperature: data.value,
-        measurementUnitId: measurementUnit.id,
+      const exchangeRateSource = await this.exchangeRateService.getRate(
+        sourceMeasurementUnit.symbol,
+        defaultMeasurementUnit.symbol,
+      );
+
+      const payload: BodyTemperatureProps = {
+        id: randomStringGenerator(),
+        bodyVitalsDetailsLogId,
+        temperature: data.value * exchangeRateSource,
+        measurementUnitId: defaultMeasurementUnit.id,
       };
 
       return (await this.save(this.create(payload))) as BodyTemperature;
     }
 
-    const sourceMeasurementUnit = await this.measurementUnitService.findOne({
-      where: { id: bodyTemperature.measurementUnitId },
-    });
-    const targetMeasurementUnit = await this.measurementUnitService.findOne({
-      where: { symbol: data.unit as unknown as string },
-    });
+    const sourceMeasurementUnit = await this.measurementUnitService.getOneById(
+      bodyTemperature.measurementUnitId,
+    );
+    const targetMeasurementUnit =
+      await this.measurementUnitService.getOneBySymbol(
+        data.unit as unknown as string,
+      );
+    const defaultMeasurementUnit =
+      await this.measurementUnitService.getDefaultTemperatureUnit();
     check(
-      [sourceMeasurementUnit, targetMeasurementUnit],
+      [sourceMeasurementUnit, targetMeasurementUnit, defaultMeasurementUnit],
       is.notNil,
       new InternalServerErrorException(
-        `TemperatureUnit is not definded: ${sourceMeasurementUnit} -- ${targetMeasurementUnit}`,
+        `TemperatureUnit is not definded: ${sourceMeasurementUnit} -- ${targetMeasurementUnit} -- ${defaultMeasurementUnit}`,
       ),
     );
 
-    const exchangeRate = await this.exchangeRateService.findOne({
-      where: { source: sourceMeasurementUnit.id, to: targetMeasurementUnit.id },
-    });
-    check(
-      exchangeRate,
-      is.notNil,
-      new InternalServerErrorException(
-        `ExchangeRate is not definded: ${sourceMeasurementUnit} -- ${targetMeasurementUnit}`,
-      ),
+    const exchangeRateSource = await this.exchangeRateService.getRate(
+      sourceMeasurementUnit.symbol,
+      defaultMeasurementUnit.symbol,
+    );
+    const exchangeRateTarget = await this.exchangeRateService.getRate(
+      targetMeasurementUnit.symbol,
+      defaultMeasurementUnit.symbol,
     );
 
-    // create new payload
-    // TOIMPROVE: json builder data
-    delete bodyTemperature.jsonData;
     const newBodyTemperature: EntityProps<BodyTemperature> = {
       ...bodyTemperature,
-      temperature: bodyTemperature.temperature * exchangeRate.rate + data.value,
-      measurementUnitId: targetMeasurementUnit.id,
+      temperature:
+        bodyTemperature.temperature * exchangeRateSource +
+        data.value * exchangeRateTarget,
+      measurementUnitId: defaultMeasurementUnit.id,
     };
-    const jsonData = JSON.stringify(newBodyTemperature);
 
-    await this.save({ ...newBodyTemperature, jsonData });
-
-    return newBodyTemperature as BodyTemperature;
+    return (await this.save(newBodyTemperature)) as BodyTemperature;
   }
 }

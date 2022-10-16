@@ -3,18 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
 
 import { DistanceDto } from '../dtos';
-import { BetweenOneDay } from '../../utils';
-import { DEFAULT_DISTANCE_UNIT, DEFAULT_DISTANCE_VALUE } from '../../constants';
 import { MeasurementUnitService } from '../../measurement-unit';
 import { ExchangeRateService } from '../../exchange-rate';
 
 import { EntityProps, EverfitBaseService } from '@everfit/api/common';
-import {
-  BodyDistance,
-  BodyDistanceProps,
-  ENTITY_NAME,
-} from '@everfit/api/entities';
+import { BodyDistance, BodyDistanceProps } from '@everfit/api/entities';
 import { is, check, randomStringGenerator } from '@everfit/shared/utils';
+import { DEFAULT_DISTANCE_UNIT } from '../../constants';
 
 @Injectable()
 export class DistanceService extends EverfitBaseService<BodyDistance> {
@@ -27,106 +22,88 @@ export class DistanceService extends EverfitBaseService<BodyDistance> {
     super(repository);
   }
 
-  async getDetailBodyDistance(
-    bodyVitalsLogId: string,
+  async findOneByBodyVitalsDetailsLogId(
+    bodyVitalsDetailsLogId: string,
     transaction?: EntityManager,
   ): Promise<BodyDistance> {
-    const bodyDistance = await this.repository.findOne({
-      where: {
-        bodyVitalsLogId,
-        createdAt: BetweenOneDay,
-      },
-      relations: [ENTITY_NAME.BODY_VITALS_LOG],
-    });
-
-    if (is.nil(bodyDistance)) {
-      const measurementUnit = await this.measurementUnitService.findOne({
-        where: { symbol: DEFAULT_DISTANCE_UNIT },
-      });
-
-      if (is.nil(measurementUnit)) {
-        throw new InternalServerErrorException('DistanceUnit is not definded!');
-      }
-
-      const payload: BodyDistanceProps = {
-        id: randomStringGenerator(),
-        bodyVitalsLogId,
-        distance: DEFAULT_DISTANCE_VALUE,
-        measurementUnitId: measurementUnit.id,
-        jsonData: null,
-      };
-
-      return (await this.save(this.create(payload))) as BodyDistance;
-    }
-
-    return bodyDistance;
+    return await this.repository.findOneBy({ bodyVitalsDetailsLogId });
   }
 
-  async upsertDetailBodyDistance(
-    bodyVitalsLogId: string,
-    data: DistanceDto,
+  async upsert(
+    data: Partial<BodyDistanceProps> &
+      DistanceDto & { bodyVitalsDetailsLogId: string },
     transaction?: EntityManager,
   ): Promise<BodyDistance> {
-    const bodyDistance = await this.getDetailBodyDistance(bodyVitalsLogId);
+    const { bodyVitalsDetailsLogId, ...restData } = data;
+    const bodyDistance = await this.findOneByBodyVitalsDetailsLogId(
+      bodyVitalsDetailsLogId,
+    );
 
-    if (bodyDistance.distance === DEFAULT_DISTANCE_VALUE) {
-      const measurementUnit = await this.measurementUnitService.findOne({
-        where: { symbol: data.unit as unknown as string },
-      });
+    if (is.nil(bodyDistance)) {
+      const sourceMeasurementUnit =
+        await this.measurementUnitService.getOneBySymbol(
+          restData.unit as unknown as string,
+        );
+      const defaultMeasurementUnit =
+        await this.measurementUnitService.getDefaultDistanceUnit();
       check(
-        measurementUnit,
+        [sourceMeasurementUnit, defaultMeasurementUnit],
         is.notNil,
         new InternalServerErrorException(
-          `DistanceUnit is not definded: ${measurementUnit}`,
+          `DistanceUnit is not definded: ${sourceMeasurementUnit} -- ${defaultMeasurementUnit}`,
         ),
       );
 
-      const payload = {
-        ...bodyDistance,
-        distance: data.value,
-        measurementUnitId: measurementUnit.id,
+      const exchangeRateSource = await this.exchangeRateService.getRate(
+        sourceMeasurementUnit.symbol,
+        defaultMeasurementUnit.symbol,
+      );
+
+      const payload: BodyDistanceProps = {
+        id: randomStringGenerator(),
+        bodyVitalsDetailsLogId,
+        distance: data.value * exchangeRateSource,
+        measurementUnitId: defaultMeasurementUnit.id,
       };
 
       return (await this.save(this.create(payload))) as BodyDistance;
     }
 
-    const sourceMeasurementUnit = await this.measurementUnitService.findOne({
-      where: { id: bodyDistance.measurementUnitId },
-    });
-    const targetMeasurementUnit = await this.measurementUnitService.findOne({
-      where: { symbol: data.unit as unknown as string },
-    });
+    const sourceMeasurementUnit = await this.measurementUnitService.getOneById(
+      bodyDistance.measurementUnitId,
+    );
+    const targetMeasurementUnit =
+      await this.measurementUnitService.getOneBySymbol(
+        data.unit as unknown as string,
+      );
+    const defaultMeasurementUnit =
+      await this.measurementUnitService.getDefaultDistanceUnit();
     check(
-      [sourceMeasurementUnit, targetMeasurementUnit],
+      [sourceMeasurementUnit, targetMeasurementUnit, defaultMeasurementUnit],
       is.notNil,
       new InternalServerErrorException(
-        `DistanceUnit is not definded: ${sourceMeasurementUnit} -- ${targetMeasurementUnit}`,
+        `DistanceUnit is not definded: ${sourceMeasurementUnit} -- ${targetMeasurementUnit} -- ${defaultMeasurementUnit}`,
       ),
     );
 
-    const exchangeRate = await this.exchangeRateService.findOne({
-      where: { source: sourceMeasurementUnit.id, to: targetMeasurementUnit.id },
-    });
-    check(
-      exchangeRate,
-      is.notNil,
-      new InternalServerErrorException(
-        `ExchangeRate is not definded: ${sourceMeasurementUnit} -- ${targetMeasurementUnit}`,
-      ),
+    const exchangeRateSource = await this.exchangeRateService.getRate(
+      sourceMeasurementUnit.symbol,
+      defaultMeasurementUnit.symbol,
     );
 
-    // create new payload
-    // TOIMPROVE: json builder data
-    delete bodyDistance.jsonData;
+    const exchangeRateTarget = await this.exchangeRateService.getRate(
+      targetMeasurementUnit.symbol,
+      defaultMeasurementUnit.symbol,
+    );
+
     const newBodyDistance: EntityProps<BodyDistance> = {
       ...bodyDistance,
-      distance: bodyDistance.distance * exchangeRate.rate + data.value,
-      measurementUnitId: targetMeasurementUnit.id,
+      distance:
+        bodyDistance.distance * exchangeRateSource +
+        data.value * exchangeRateTarget,
+      measurementUnitId: defaultMeasurementUnit.id,
     };
-    const jsonData = JSON.stringify(newBodyDistance);
 
-    await this.save({ ...newBodyDistance, jsonData });
-
-    return newBodyDistance as BodyDistance;
+    return (await this.save(newBodyDistance)) as BodyDistance;
   }
 }

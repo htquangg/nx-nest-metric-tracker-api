@@ -3,7 +3,9 @@ import { Exclude } from 'class-transformer';
 
 import { ENTITY_NAME } from '../constants';
 
-import { EverfitBaseEntity } from '@everfit/api/common';
+import { EntityProps, EverfitBaseEntity } from '@everfit/api/common';
+
+export type ExchangeRateProps = EntityProps<ExchangeRate>;
 
 @Entity({ name: ENTITY_NAME.EXCHANGE_RATE })
 export class ExchangeRate extends EverfitBaseEntity {

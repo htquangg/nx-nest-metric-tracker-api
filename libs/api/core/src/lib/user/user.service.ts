@@ -7,6 +7,8 @@ import { CachingService } from '@everfit/api/services';
 import { User } from '@everfit/api/entities';
 import { randomStringGenerator } from '@everfit/shared/utils';
 
+const CACHE_PREFIX_USER = '__user_';
+
 @Injectable()
 export class UserService extends EverfitBaseService<User> {
   constructor(
@@ -33,7 +35,7 @@ export class UserService extends EverfitBaseService<User> {
    *
    **/
   async getUserByEmail(email: string): Promise<User> {
-    return await this.cacheService.get(`user_${email}`, () =>
+    return await this.cacheService.get(`${CACHE_PREFIX_USER}_${email}`, () =>
       this.findOne({
         where: {
           email,
@@ -47,7 +49,7 @@ export class UserService extends EverfitBaseService<User> {
    *
    **/
   async getUserById(id: string): Promise<User> {
-    return await this.cacheService.get(`user_${id}`, () =>
+    return await this.cacheService.get(`${CACHE_PREFIX_USER}_${id}`, () =>
       this.findOne({
         where: {
           id,

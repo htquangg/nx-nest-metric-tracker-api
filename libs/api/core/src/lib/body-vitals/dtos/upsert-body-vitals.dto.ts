@@ -8,7 +8,9 @@ import {
 
 import { DistanceDto, TemperatureDto } from './base-body-vitals.dto';
 
-export class UpsertBodyVitalsDto {
+export class UpsertBodyVitalsParamsDto {}
+
+export class UpsertBodyVitalsBodyDto {
   @IsDefined()
   @IsNotEmptyObject()
   @IsObject()
@@ -23,3 +25,7 @@ export class UpsertBodyVitalsDto {
   @Type(() => TemperatureDto)
   temperature: TemperatureDto;
 }
+
+export interface UpsertBodyVitalsPayload
+  extends UpsertBodyVitalsBodyDto,
+    UpsertBodyVitalsParamsDto {}
