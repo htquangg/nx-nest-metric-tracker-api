@@ -1,17 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, getManager, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
-import { GetBodyVitalsPayload, UpsertBodyVitalsPayload } from './dtos';
-import { TemperatureService } from './temperature';
 import { DistanceService } from './distance';
-import { BetweenOneDay, endDayNow, startDayNow } from '../utils';
+import { TemperatureService } from './temperature';
+import { GetBodyVitalsPayload, UpsertBodyVitalsPayload } from './dtos';
+import { BodyVitalsDetailsService } from './body-vitals-details.service';
+import { UserService } from '../user';
+import { BetweenOneDay } from '../utils';
 
 import { EverfitBaseService } from '@everfit/api/common';
 import {
+  BodyVitalsDetailsLog,
   BodyVitalsLog,
   BodyVitalsLogProps,
-  ENTITY_NAME,
 } from '@everfit/api/entities';
 import { is, randomStringGenerator } from '@everfit/shared/utils';
 import { InjectPostgresConfig } from '@everfit/api/config';
@@ -29,8 +31,62 @@ export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
     protected readonly cacheService: CachingService,
     protected readonly distanceService: DistanceService,
     protected readonly temperatureService: TemperatureService,
+    protected readonly userService: UserService,
+    @Inject(forwardRef(() => BodyVitalsDetailsService))
+    private bodyVitalsDetailsService: BodyVitalsDetailsService,
   ) {
     super(repository);
+  }
+
+  async findLastVitals(
+    userId: string,
+    payload?: Partial<
+      Pick<
+        GetBodyVitalsPayload,
+        'distanceUnit' | 'temperatureUnit' | 'lastOneMonth' | 'lastTwoMonths'
+      >
+    >,
+  ): Promise<BodyVitalsLog[]> {
+    const user = await this.userService.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    if (is.nil(user)) return [];
+
+    const { lastTwoMonths } = payload;
+
+    let dataOutput: any;
+
+    if (lastTwoMonths) {
+      dataOutput = user.lastVitalsLogTwoMonths;
+    } else {
+      dataOutput = user.lastVitalsLogTwoMonths;
+    }
+
+    if (is.nil(dataOutput)) return [];
+
+    const dataOutputParse = JSON.parse(dataOutput) as BodyVitalsLog[];
+
+    const formatDataOut = await Promise.all(
+      dataOutputParse['lastBodyVitalsLog'].map(async (bodyVitalsLog) => {
+        const bodyVitalsDetailsList = Object.values(
+          bodyVitalsLog,
+        )[0] as unknown as BodyVitalsDetailsLog[];
+        const newBodyVitalsDetailsList =
+          await this.bodyVitalsDetailsService.convertBodyVitalsDetailsToTargetUnit(
+            bodyVitalsDetailsList.map((bodyVitalsDetails) =>
+              JSON.parse(bodyVitalsDetails as any),
+            ),
+            payload,
+          );
+        return {
+          [`${Object.keys(bodyVitalsLog)[0]}`]: newBodyVitalsDetailsList,
+        };
+      }),
+    );
+
+    return formatDataOut;
   }
 
   async findByUserId(

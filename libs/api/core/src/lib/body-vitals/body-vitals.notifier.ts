@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { startOfDay } from 'date-fns';
 
 import { BodyVitalsService } from './body-vitals.service';
 import { BodyVitalsEvents } from './constants';
@@ -20,13 +21,15 @@ export class BodyVitalsNotifier {
     );
     if (is.nil(bodyVitalsLog)) return;
 
+    const createdAt = startOfDay(bodyVitalsLog.createdAt).getTime();
+
     let jsonData;
 
     if (is.notNil(bodyVitalsLog.jsonData)) {
       jsonData = JSON.parse(bodyVitalsLog.jsonData);
-      jsonData.push(data.jsonData);
+      jsonData[`${createdAt}`].push(data.jsonData);
     } else {
-      jsonData = [data.jsonData];
+      jsonData = { [`${createdAt}`]: [data.jsonData] };
     }
     return this.bodyVitalsService.save({
       ...bodyVitalsLog,

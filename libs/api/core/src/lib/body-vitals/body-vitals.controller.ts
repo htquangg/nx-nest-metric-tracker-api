@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  HttpServer,
+  HttpStatus,
+} from '@nestjs/common';
 
 import {
   GetBodyVitalsQueryDto,
@@ -48,6 +57,26 @@ export class BodyVitalsController {
     );
   }
 
+  @Get('/chart')
+  async getChartBodyVitalsLog(
+    @CurrentUser() currentUser: AuthUserDto,
+    @Query() query?: GetBodyVitalsQueryDto,
+  ) {
+    const payload: GetBodyVitalsPayload = {
+      ...query,
+    };
+    // if (is.notNil(payload) && is.notNil(payload.bodyVitalsId)) {
+    //   return await this.bodyVitalsService.findOneById(
+    //     payload.bodyVitalsId,
+    //     payload,
+    //   );
+    // }
+    return await this.bodyVitalsService.findLastVitals(
+      currentUser.userId,
+      payload,
+    );
+  }
+
   @Post('/body-vitals')
   async upsertBodyVitalsLog(
     @CurrentUser() currentUser: AuthUserDto,
@@ -57,7 +86,7 @@ export class BodyVitalsController {
     //   ...body,
     // };
     // await this.bodyVitalsService.upsertByUserId(currentUser.userId, payload);
-    return Promise.resolve();
+    return HttpStatus.CREATED;
   }
 
   @Get('/body-vitals-details/:bodyVitalsDetailsId?')
@@ -97,6 +126,6 @@ export class BodyVitalsController {
       currentUser.userId,
       payload,
     );
-    return Promise.resolve();
+    return HttpStatus.CREATED;
   }
 }

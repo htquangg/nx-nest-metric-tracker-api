@@ -1,16 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { Between, In } from 'typeorm';
 
 import {
   UserService,
   BodyVitalsService,
   BetweenOneMonth,
   BetweenTwoMonths,
-  startLastTwoMonths,
-  endLastOneMonth,
 } from '@everfit/api/core';
 import { is } from '@everfit/shared/utils';
+import { BodyVitalsLog, User } from '@everfit/api/entities';
 
 @Injectable()
 export class LastVitalsLogCronJob {
@@ -26,14 +24,7 @@ export class LastVitalsLogCronJob {
       relations: ['bodyVitalLogs'],
     });
     if (is.notNil(users)) {
-      const updateUsers = users.map((user) => {
-        const lastVitalsLogOneMonth = user.bodyVitalLogs.map((bodyVitalsLog) =>
-          JSON.parse(bodyVitalsLog.jsonData),
-        );
-        user.lastVitalsLogOneMonth = JSON.stringify(lastVitalsLogOneMonth);
-        return user;
-      }, []);
-      await this.userService.save(updateUsers);
+      await this.formatLastVitalsLogJsonData(users, 'lastVitalsOneMonth');
     }
   }
 
@@ -48,14 +39,32 @@ export class LastVitalsLogCronJob {
       relations: ['bodyVitalLogs'],
     });
     if (is.notNil(users)) {
-      const updateUsers = users.map((user) => {
-        const lastVitalsLogTwoMonths = user.bodyVitalLogs.map((bodyVitalsLog) =>
-          JSON.parse(bodyVitalsLog.jsonData),
-        );
-        user.lastVitalsLogTwoMonths = JSON.stringify(lastVitalsLogTwoMonths);
-        return user;
-      }, []);
-      await this.userService.save(updateUsers);
+      await this.formatLastVitalsLogJsonData(users, 'lastVitalsLogTwoMonths');
     }
+  }
+
+  protected async formatLastVitalsLogJsonData(
+    users: User[],
+    duration: 'lastVitalsOneMonth' | 'lastVitalsLogTwoMonths',
+  ) {
+    const updateUsers = users.map((user) => {
+      const lastBodyVitalsLog = user.bodyVitalLogs.map((bodyVitalsLog) =>
+        JSON.parse(bodyVitalsLog.jsonData),
+      ) as BodyVitalsLog[];
+      const lastBodyVitalsDetails = lastBodyVitalsLog.map(
+        (bodyVitalsDetailsLog) => {
+          const createdAt = Object.keys(bodyVitalsDetailsLog)[0];
+          const bodyVitalsDetailsLogJsonData = {
+            [`${createdAt}`]: Object.values(bodyVitalsDetailsLog)[0],
+          };
+          return bodyVitalsDetailsLogJsonData;
+        },
+      );
+      user[duration] = JSON.stringify({
+        lastBodyVitalsLog: lastBodyVitalsDetails,
+      });
+      return user;
+    }, []);
+    await this.userService.save(updateUsers);
   }
 }

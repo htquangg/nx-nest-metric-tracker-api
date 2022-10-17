@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Inject,
+  forwardRef,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -22,9 +27,7 @@ import { check, is, randomStringGenerator } from '@everfit/shared/utils';
 import { InjectPostgresConfig } from '@everfit/api/config';
 import { PostgresConfig } from '@everfit/api/types';
 import { CachingService } from '@everfit/api/services';
-import { randomBytes } from 'crypto';
 import { BodyVitalsEvents } from './constants';
-import { json } from 'stream/consumers';
 
 const CACHE_PREFIX_BODY_VITALS_DETAILS = '__body_vitals_details_';
 
@@ -38,6 +41,7 @@ export class BodyVitalsDetailsService extends EverfitBaseService<BodyVitalsDetai
     protected readonly eventEmitter: EventEmitter2,
     protected readonly measurementUnitService: MeasurementUnitService,
     protected readonly exchangeRateService: ExchangeRateService,
+    @Inject(forwardRef(() => BodyVitalsService))
     protected readonly bodyVitalsService: BodyVitalsService,
     protected readonly distanceService: DistanceService,
     protected readonly temperatureService: TemperatureService,
@@ -54,10 +58,99 @@ export class BodyVitalsDetailsService extends EverfitBaseService<BodyVitalsDetai
     );
 
     // TOIMPROVE: remove duplicate code
+    const newBodyVitalsDetailsList = this.convertBodyVitalsDetailsToTargetUnit(
+      bodyVitalsDetailsList,
+      payload,
+    );
 
+    return newBodyVitalsDetailsList;
+  }
+
+  async getByBodyVitalsLogId(
+    bodyVitalsLogId: string,
+  ): Promise<BodyVitalsDetailsLog[]> {
+    return await this.cacheService.get(
+      `${CACHE_PREFIX_BODY_VITALS_DETAILS}_list_${bodyVitalsLogId}`,
+      () =>
+        this.find({
+          where: { bodyVitalsLogId },
+          relations: ['bodyTemperature', 'bodyDistance'],
+        }),
+    );
+  }
+
+  async findOneById(
+    id: string,
+    payload?: Pick<GetBodyVitalsPayload, 'distanceUnit' | 'temperatureUnit'>,
+  ): Promise<BodyVitalsDetailsLog | null> {
+    const bodyVitalsDetails = await this.findOne({
+      where: {
+        id,
+      },
+      relations: ['bodyTemperature', 'bodyDistance'],
+    });
+
+    if (is.nil(bodyVitalsDetails)) {
+      return Promise.resolve(null);
+    }
+
+    const newBodyVitalsDetailsList = this.convertBodyVitalsDetailsToTargetUnit(
+      [bodyVitalsDetails],
+      payload,
+    );
+
+    return newBodyVitalsDetailsList[0];
+  }
+
+  async upsertByUserId(
+    userId: string,
+    data: UpsertBodyVitalsPayload,
+  ): Promise<BodyVitalsDetailsLog> {
+    const bodyVitalsLog = await this.bodyVitalsService.findOneByUserId(userId);
+
+    const newBodyVitalsDetailsLog = (await this.save(
+      this.create({
+        id: randomStringGenerator(),
+        bodyVitalsLogId: bodyVitalsLog.id,
+      }),
+    )) as BodyVitalsDetailsLog;
+
+    const bodyDistance = await this.distanceService.upsert({
+      ...data.distance,
+      bodyVitalsDetailsLogId: newBodyVitalsDetailsLog.id,
+    });
+    const bodyTemperature = await this.temperatureService.upsert({
+      ...data.temperature,
+      bodyVitalsDetailsLogId: newBodyVitalsDetailsLog.id,
+    });
+
+    // create new payload
+    // TOIMPROVE: json builder data
+    delete newBodyVitalsDetailsLog.jsonData;
+    const jsonData = JSON.stringify({
+      ...newBodyVitalsDetailsLog,
+      bodyDistance,
+      bodyTemperature,
+    });
+
+    this.eventEmitter.emitAsync(BodyVitalsEvents.NewBodyVitalsDetails, {
+      bodyVitalsLogId: bodyVitalsLog.id,
+      jsonData,
+    });
+
+    return (await this.save({
+      ...newBodyVitalsDetailsLog,
+    })) as unknown as BodyVitalsDetailsLog;
+  }
+
+  public async convertBodyVitalsDetailsToTargetUnit(
+    bodyVitalsDetailsList: BodyVitalsDetailsLog[],
+    payload?: Pick<GetBodyVitalsPayload, 'distanceUnit' | 'temperatureUnit'>,
+  ): Promise<BodyVitalsDetailsLog[]> {
+    // TOIMPROVE: move this to after interceptor
     const { distanceUnit, temperatureUnit } = payload;
 
-    const newBodyVitalsDetailsList = await Promise.all(
+    return await Promise.all(
       bodyVitalsDetailsList.map(async (bodyVitalsDetails) => {
         if (is.notNil(bodyVitalsDetails.bodyTemperature)) {
           const temperatureUnitString =
@@ -111,154 +204,24 @@ export class BodyVitalsDetailsService extends EverfitBaseService<BodyVitalsDetai
         return bodyVitalsDetails;
       }),
     );
-
-    return newBodyVitalsDetailsList;
   }
-
-  async getByBodyVitalsLogId(
-    bodyVitalsLogId: string,
-  ): Promise<BodyVitalsDetailsLog[]> {
-    return await this.cacheService.get(
-      `${CACHE_PREFIX_BODY_VITALS_DETAILS}_list_${bodyVitalsLogId}`,
-      () =>
-        this.find({
-          where: { bodyVitalsLogId },
-          relations: ['bodyTemperature', 'bodyDistance'],
-        }),
-    );
-  }
-
-  async findOneById(
-    id: string,
-    payload?: Pick<GetBodyVitalsPayload, 'distanceUnit' | 'temperatureUnit'>,
-  ): Promise<BodyVitalsDetailsLog | null> {
-    let bodyVitalsDetails = await this.findOne({
-      where: {
-        id,
-      },
-      relations: ['bodyTemperature', 'bodyDistance'],
-    });
-
-    if (is.nil(bodyVitalsDetails)) {
-      return Promise.resolve(null);
-    }
-
-    const { distanceUnit, temperatureUnit } = payload;
-
-    // TOIMPROVE: remove duplicate code
-
-    if (is.notNil(bodyVitalsDetails.bodyTemperature)) {
-      const temperatureUnitString =
-        (temperatureUnit as unknown as string) || DEFAULT_TEMPERATURE_UNIT;
-
-      const { targetMeasurementUnit, exchangeRate } =
-        await this.getExchangeRateInfoFromUnitIdAndSymbol(
-          bodyVitalsDetails.bodyTemperature.measurementUnitId,
-          temperatureUnitString as unknown as string,
-        );
-
-      const bodyTemperature = {
-        ...bodyVitalsDetails.bodyTemperature,
-        temperature:
-          bodyVitalsDetails.bodyTemperature.temperature * exchangeRate,
-        measurementUnit: targetMeasurementUnit.symbol,
-      } as any as BodyTemperature;
-
-      delete bodyTemperature.measurementUnitId;
-
-      bodyVitalsDetails = {
-        ...bodyVitalsDetails,
-        bodyTemperature,
-      } as BodyVitalsDetailsLog;
-    }
-
-    if (is.notNil(bodyVitalsDetails.bodyDistance)) {
-      const distanceUnitString =
-        (distanceUnit as unknown as string) || DEFAULT_DISTANCE_UNIT;
-
-      const { targetMeasurementUnit, exchangeRate } =
-        await this.getExchangeRateInfoFromUnitIdAndSymbol(
-          bodyVitalsDetails.bodyDistance.measurementUnitId,
-          distanceUnitString,
-        );
-
-      const bodyDistance = {
-        ...bodyVitalsDetails.bodyDistance,
-        distance: bodyVitalsDetails.bodyDistance.distance * exchangeRate,
-        measurementUnit: targetMeasurementUnit.symbol,
-      } as any as BodyDistance;
-
-      delete bodyDistance.measurementUnitId;
-
-      bodyVitalsDetails = {
-        ...bodyVitalsDetails,
-        bodyDistance,
-      } as BodyVitalsDetailsLog;
-    }
-
-    return bodyVitalsDetails;
-  }
-
-  async upsertByUserId(
-    userId: string,
-    data: UpsertBodyVitalsPayload,
-  ): Promise<BodyVitalsDetailsLog> {
-    const bodyVitalsLog = await this.bodyVitalsService.findOneByUserId(userId);
-
-    const newBodyVitalsDetailsLog = (await this.save(
-      this.create({
-        id: randomStringGenerator(),
-        bodyVitalsLogId: bodyVitalsLog.id,
-      }),
-    )) as BodyVitalsDetailsLog;
-
-    const bodyDistance = await this.distanceService.upsert({
-      ...data.distance,
-      bodyVitalsDetailsLogId: newBodyVitalsDetailsLog.id,
-    });
-    const bodyTemperature = await this.temperatureService.upsert({
-      ...data.temperature,
-      bodyVitalsDetailsLogId: newBodyVitalsDetailsLog.id,
-    });
-
-    // create new payload
-    // TOIMPROVE: json builder data
-    delete newBodyVitalsDetailsLog.jsonData;
-    const jsonData = JSON.stringify({
-      ...newBodyVitalsDetailsLog,
-      distance: bodyDistance,
-      temperature: bodyTemperature,
-    });
-
-    this.eventEmitter.emitAsync(BodyVitalsEvents.NewBodyVitalsDetails, {
-      bodyVitalsLogId: bodyVitalsLog.id,
-      jsonData,
-    });
-
-    return (await this.save({
-      ...newBodyVitalsDetailsLog,
-    })) as unknown as BodyVitalsDetailsLog;
-  }
-
   protected async getExchangeRateInfoFromUnitIdAndSymbol(
-    unitId: string,
-    symbol: string,
+    source: string,
+    to: string,
   ): Promise<{
     sourceMeasurementUnit: MeasurementUnitProps;
     targetMeasurementUnit: MeasurementUnitProps;
     exchangeRate: number;
   }> {
-    // TOIMPROVE: optional input
-    const sourceMeasurementUnit = await this.measurementUnitService.getOneById(
-      unitId,
-    );
+    const sourceMeasurementUnit =
+      await this.measurementUnitService.getOneByIdOrSymbol(source);
     const targetMeasurementUnit =
-      await this.measurementUnitService.getOneBySymbol(symbol);
+      await this.measurementUnitService.getOneByIdOrSymbol(to);
     check(
       [sourceMeasurementUnit, targetMeasurementUnit],
       is.notNil,
       new InternalServerErrorException(
-        `MeasurementUnit is not definded: ${unitId} --> ${symbol}`,
+        `MeasurementUnit is not definded: ${source} --> ${to}`,
       ),
     );
 

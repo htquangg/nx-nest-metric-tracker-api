@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 
 import { DistanceUnit, TemperatureUnit } from '../../constants';
 import { DistanceUnitType, TemperatureUnitType } from '../../types';
@@ -21,6 +21,14 @@ export class GetBodyVitalsQueryDto {
   @IsOptional()
   @IsEnum(TemperatureUnit)
   temperatureUnit?: TemperatureUnitType;
+
+  @IsOptional()
+  @IsBoolean()
+  lastTwoMonths: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  lastOneMonth: boolean;
 }
 
 export interface GetBodyVitalsPayload

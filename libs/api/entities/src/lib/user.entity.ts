@@ -46,15 +46,15 @@ export class User extends EverfitBaseEntity {
   @Column({ nullable: true })
   phone?: string;
 
-  @Exclude()
+  @Expose()
   @Column({ name: 'last_sign_on', nullable: true })
   lastSignOn?: Date;
 
-  @Exclude()
+  @Expose()
   @Column({ name: 'last_vitals_log_one_month', nullable: true })
-  lastVitalsLogOneMonth?: string;
+  lastVitalsLogTwoMonths?: string;
 
-  @Exclude()
+  @Expose()
   @Column({ name: 'last_vitals_log_two_months', nullable: true })
   lastVitalsLogTwoMonths?: string;
 

@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, JoinColumn, ManyToOne } from 'typeorm';
-import { Expose } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 
 import { User } from './user.entity';
 import { ENTITY_NAME } from '../constants';
@@ -15,7 +15,7 @@ export class BodyVitalsLog extends EverfitBaseEntity {
   @Column({ name: 'user_id' })
   userId: string;
 
-  @Expose()
+  @Exclude()
   @Column({ name: 'json_data', nullable: true })
   jsonData?: string;
 

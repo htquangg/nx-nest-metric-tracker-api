@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { DEFAULT_DISTANCE_UNIT, DEFAULT_TEMPERATURE_UNIT } from '../constants';
 
@@ -18,6 +18,14 @@ export class MeasurementUnitService extends EverfitBaseService<MeasurementUnit> 
     protected readonly cacheService: CachingService,
   ) {
     super(repository);
+  }
+
+  async getOneByIdOrSymbol(idOrSymbol: string): Promise<MeasurementUnit> {
+    return await this.cacheService.get(
+      `${CACHE_PREFIX_MEASUREMENT_UNIT}_idOrSymbol_${idOrSymbol}}`,
+      () =>
+        this.findOne({ where: [{ id: idOrSymbol }, { symbol: idOrSymbol }] }),
+    );
   }
 
   async getOneById(id: string): Promise<MeasurementUnit> {

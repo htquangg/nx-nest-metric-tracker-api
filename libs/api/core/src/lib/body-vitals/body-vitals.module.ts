@@ -18,6 +18,7 @@ import {
   BodyVitalsDetailsLog,
 } from '@everfit/api/entities';
 import { ApiCachingModule } from '@everfit/api/services';
+import { UserModule } from '../user';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ApiCachingModule } from '@everfit/api/services';
     MeasurementUnitModule,
     ExchangeRateModule,
     ApiCachingModule,
+    UserModule,
     EventEmitterModule.forRoot({}),
   ],
   controllers: [BodyVitalsController],
@@ -40,6 +42,11 @@ import { ApiCachingModule } from '@everfit/api/services';
     BodyVitalsDetailsService,
     BodyVitalsNotifier,
   ],
-  exports: [BodyVitalsService, DistanceService, TemperatureService],
+  exports: [
+    BodyVitalsService,
+    BodyVitalsDetailsService,
+    DistanceService,
+    TemperatureService,
+  ],
 })
 export class BodyVitalsModule {}
