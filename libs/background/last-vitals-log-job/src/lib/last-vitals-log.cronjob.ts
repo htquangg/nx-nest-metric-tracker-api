@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { Between, In } from 'typeorm';
 
 import {
   UserService,
   BodyVitalsService,
   BetweenOneMonth,
   BetweenTwoMonths,
+  startLastTwoMonths,
+  endLastOneMonth,
 } from '@everfit/api/core';
 import { is } from '@everfit/shared/utils';
 
@@ -18,57 +21,41 @@ export class LastVitalsLogCronJob {
 
   @Cron('0 0 0 * * *') // At 00:00 everyday
   async buildLastVitalsLogLastOneMonth(): Promise<void> {
-    const users = await this.userService.find();
+    const users = await this.userService.find({
+      where: { bodyVitalLogs: { createdAt: BetweenOneMonth as any } },
+      relations: ['bodyVitalLogs'],
+    });
     if (is.notNil(users)) {
-      users.map(async (user) => {
-        const bodyVitalsLogs = await this.bodyVitalsLogService.find({
-          where: {
-            userId: user.id,
-            createdAt: BetweenOneMonth as any,
-          },
-        });
-
-        if (is.notNil(bodyVitalsLogs) && !is.empty(bodyVitalsLogs)) {
-          // create new payload
-          // TOIMPROVE: json builder data
-          delete user.lastVitalsLogOneMonth;
-          const jsonData = bodyVitalsLogs.reduce((acc, cur) => {
-            return [...acc, cur.jsonData];
-          }, []);
-          await this.userService.save({
-            ...user,
-            lastVitalsLogOneMonth: JSON.stringify(jsonData),
-          });
-        }
-      });
+      const updateUsers = users.map((user) => {
+        const lastVitalsLogOneMonth = user.bodyVitalLogs.map((bodyVitalsLog) =>
+          JSON.parse(bodyVitalsLog.jsonData),
+        );
+        user.lastVitalsLogOneMonth = JSON.stringify(lastVitalsLogOneMonth);
+        return user;
+      }, []);
+      await this.userService.save(updateUsers);
     }
   }
 
-  @Cron('0 0 2 * * *') // At 2:00 everyday
+  @Cron('0 0 4 * * *') // At 4:00 everyday
   async buildLastVitalsLogLastTwoMonths(): Promise<void> {
-    const users = await this.userService.find();
+    const users = await this.userService.find({
+      where: {
+        bodyVitalLogs: {
+          createdAt: BetweenTwoMonths as any,
+        },
+      },
+      relations: ['bodyVitalLogs'],
+    });
     if (is.notNil(users)) {
-      users.map(async (user) => {
-        const bodyVitalsLogs = await this.bodyVitalsLogService.find({
-          where: {
-            userId: user.id,
-            createdAt: BetweenTwoMonths as any,
-          },
-        });
-
-        if (is.notNil(bodyVitalsLogs) && !is.empty(bodyVitalsLogs)) {
-          // create new payload
-          // TOIMPROVE: json builder data
-          delete user.lastVitalsLogTwoMonths;
-          const jsonData = bodyVitalsLogs.reduce((acc, cur) => {
-            return [...acc, cur.jsonData];
-          }, []);
-          await this.userService.save({
-            ...user,
-            lastVitalsLogTwoMonths: JSON.stringify(jsonData),
-          });
-        }
-      });
+      const updateUsers = users.map((user) => {
+        const lastVitalsLogTwoMonths = user.bodyVitalLogs.map((bodyVitalsLog) =>
+          JSON.parse(bodyVitalsLog.jsonData),
+        );
+        user.lastVitalsLogTwoMonths = JSON.stringify(lastVitalsLogTwoMonths);
+        return user;
+      }, []);
+      await this.userService.save(updateUsers);
     }
   }
 }

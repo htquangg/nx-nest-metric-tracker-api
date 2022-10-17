@@ -1,13 +1,17 @@
 import { Between } from 'typeorm';
-import { startOfDay, endOfDay, subDays, formatISO } from 'date-fns';
+import { startOfDay, endOfDay, subDays } from 'date-fns';
 
 export const startDayNow = startOfDay(Date.now());
 
 export const endDayNow = endOfDay(Date.now());
 
-export const lastOneMonth = startOfDay(subDays(startDayNow, 30));
+export const startLastOneMonth = startOfDay(subDays(startDayNow, 30));
 
-export const lastTwoMonths = startOfDay(subDays(startDayNow, 60));
+export const endLastOneMonth = endOfDay(subDays(startDayNow, 30));
+
+export const startLastTwoMonths = startOfDay(subDays(startDayNow, 60));
+
+export const endLastTwoMonths = endOfDay(subDays(startDayNow, 60));
 
 export const BetweenOneDay = Between(
   startDayNow.toISOString(),
@@ -15,11 +19,11 @@ export const BetweenOneDay = Between(
 );
 
 export const BetweenOneMonth = Between(
-  lastOneMonth.toISOString(),
+  startLastOneMonth.toISOString(),
   endDayNow.toISOString(),
 );
 
 export const BetweenTwoMonths = Between(
-  lastTwoMonths.toISOString(),
+  startLastTwoMonths.toISOString(),
   endDayNow.toISOString(),
 );
