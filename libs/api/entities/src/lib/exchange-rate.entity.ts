@@ -18,6 +18,6 @@ export class ExchangeRate extends EverfitBaseEntity {
   to: string;
 
   @Exclude()
-  @Column()
+  @Column('decimal', { precision: 10, scale: 2 })
   rate: number;
 }
