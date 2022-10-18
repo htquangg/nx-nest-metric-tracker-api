@@ -3,9 +3,10 @@ import {
   forwardRef,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { getManager, Repository } from 'typeorm';
+import { getManager, Repository, In } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { TemperatureService } from './temperature';
@@ -51,17 +52,38 @@ export class BodyVitalsDetailsService extends EverfitBaseService<BodyVitalsDetai
 
   async findByBodyVitalsLogId(
     bodyVitalsLogId: string,
+  ): Promise<BodyVitalsDetailsLog[]> {
+    return await this.find({
+      where: { bodyVitalsLogId },
+      relations: ['bodyTemperature', 'bodyDistance'],
+    });
+  }
+
+  async findByBodyVitalsLogIds(
+    bodyVitalsLogIds: string | string[],
     payload?: Pick<GetBodyVitalsPayload, 'distanceUnit' | 'temperatureUnit'>,
   ): Promise<BodyVitalsDetailsLog[]> {
-    const bodyVitalsDetailsList = await this.getByBodyVitalsLogId(
-      bodyVitalsLogId,
-    );
+    let bodyVitalsDetailsList;
+
+    if (!is.array(bodyVitalsLogIds)) {
+      bodyVitalsDetailsList = await this.findByBodyVitalsLogId(
+        bodyVitalsLogIds,
+      );
+    } else {
+      bodyVitalsDetailsList = await this.find({
+        where: {
+          bodyVitalsLogId: In(bodyVitalsLogIds),
+        },
+        relations: ['bodyTemperature', 'bodyDistance'],
+      });
+    }
 
     // TOIMPROVE: remove duplicate code
-    const newBodyVitalsDetailsList = this.convertBodyVitalsDetailsToTargetUnit(
-      bodyVitalsDetailsList,
-      payload,
-    );
+    const newBodyVitalsDetailsList =
+      await this.convertBodyVitalsDetailsToTargetUnit(
+        bodyVitalsDetailsList,
+        payload,
+      );
 
     return newBodyVitalsDetailsList;
   }
@@ -79,6 +101,21 @@ export class BodyVitalsDetailsService extends EverfitBaseService<BodyVitalsDetai
     );
   }
 
+  async getByBodyVitalsLogIds(
+    bodyVitalsLogIds: string[],
+  ): Promise<BodyVitalsDetailsLog[]> {
+    return await this.cacheService.get(
+      `${CACHE_PREFIX_BODY_VITALS_DETAILS}_list_body`,
+      () =>
+        this.find({
+          where: {
+            bodyVitalsLogId: In(bodyVitalsLogIds),
+          },
+          relations: ['bodyTemperature', 'bodyDistance'],
+        }),
+    );
+  }
+
   async findOneById(
     id: string,
     payload?: Pick<GetBodyVitalsPayload, 'distanceUnit' | 'temperatureUnit'>,
@@ -89,15 +126,13 @@ export class BodyVitalsDetailsService extends EverfitBaseService<BodyVitalsDetai
       },
       relations: ['bodyTemperature', 'bodyDistance'],
     });
+    check(bodyVitalsDetails, is.notNil, new NotFoundException(id));
 
-    if (is.nil(bodyVitalsDetails)) {
-      return Promise.resolve(null);
-    }
-
-    const newBodyVitalsDetailsList = this.convertBodyVitalsDetailsToTargetUnit(
-      [bodyVitalsDetails],
-      payload,
-    );
+    const newBodyVitalsDetailsList =
+      await this.convertBodyVitalsDetailsToTargetUnit(
+        [bodyVitalsDetails],
+        payload,
+      );
 
     return newBodyVitalsDetailsList[0];
   }

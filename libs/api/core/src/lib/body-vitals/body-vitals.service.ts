@@ -1,4 +1,9 @@
-import { forwardRef, Injectable, Inject } from '@nestjs/common';
+import {
+  forwardRef,
+  Injectable,
+  Inject,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -15,7 +20,7 @@ import {
   BodyVitalsLog,
   BodyVitalsLogProps,
 } from '@everfit/api/entities';
-import { is, randomStringGenerator } from '@everfit/shared/utils';
+import { is, check, randomStringGenerator } from '@everfit/shared/utils';
 import { InjectPostgresConfig } from '@everfit/api/config';
 import { PostgresConfig } from '@everfit/api/types';
 import { CachingService } from '@everfit/api/services';
@@ -52,7 +57,7 @@ export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
         id: userId,
       },
     });
-    if (is.nil(user)) return [];
+    check(user, is.notNil, new NotFoundException(userId));
 
     const { lastTwoMonths } = payload;
 
@@ -68,7 +73,7 @@ export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
 
     const dataOutputParse = JSON.parse(dataOutput) as BodyVitalsLog[];
 
-    const formatDataOut = await Promise.all(
+    const formatDataOutput = await Promise.all(
       dataOutputParse['lastBodyVitalsLog'].map(async (bodyVitalsLog) => {
         const bodyVitalsDetailsList = Object.values(
           bodyVitalsLog,
@@ -86,7 +91,7 @@ export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
       }),
     );
 
-    return formatDataOut;
+    return formatDataOutput;
   }
 
   async findByUserId(
@@ -108,17 +113,6 @@ export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
       },
       relations: ['bodyVitalDetailsLogs'],
     });
-
-    if (is.notNil(payload)) {
-      const { distanceUnit, temperatureUnit } = payload;
-
-      if (is.notNil(distanceUnit)) {
-      }
-
-      if (is.notNil(temperatureUnit)) {
-      }
-    }
-
     return bodyVitalsLog;
   }
 
@@ -131,9 +125,9 @@ export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
         userId,
         createdAt: BetweenOneDay as any,
       },
-      // relations: [ENTITY_NAME.BODY_VITALS_DETAILS_LOG],
     });
 
+    // create new record for each day if not found
     if (is.nil(bodyVitalsLog)) {
       const payload: BodyVitalsLogProps = {
         id: randomStringGenerator(),
@@ -151,31 +145,7 @@ export class BodyVitalsService extends EverfitBaseService<BodyVitalsLog> {
     userId: string,
     data: UpsertBodyVitalsPayload,
   ): Promise<BodyVitalsLog> {
-    // const bodyVitalsLog = await this.findOneByUserId(userId);
-    // await getManager(this.postgresConfig.database).transaction(
-    //   async (transaction) => {
-    //     const bodyDistance = await this.distanceService.upsert(
-    //       { ...data.distance, bodyVitalsDetailsLogId: bodyVitalsLog.id },
-    //       transaction,
-    //     );
-    //     const bodyTemperature = await this.temperatureService.upsert(
-    //       { ...data.temperature, bodyVitalsDetailsLogId: bodyVitalsLog.id },
-    //       transaction,
-    //     );
-    //     // create new payload
-    //     // TOIMPROVE: json builder data
-    //     delete bodyVitalsLog.jsonData;
-    //     const newBodyVitalsLog = {
-    //       ...bodyVitalsLog,
-    //     };
-    //     const jsonData = JSON.stringify({
-    //       distance: bodyDistance.jsonData,
-    //       temperature: bodyTemperature.jsonData,
-    //     });
-    //     return { ...newBodyVitalsLog, jsonData };
-    //   },
-    // );
-    // return bodyVitalsLog;
+    throw new Error('Not implemented!');
   }
 
   async getOneByUserId(

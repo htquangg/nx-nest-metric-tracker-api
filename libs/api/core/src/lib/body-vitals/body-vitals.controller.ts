@@ -105,11 +105,11 @@ export class BodyVitalsController {
         payload,
       );
     }
-    const bodyVitalLogs = await this.bodyVitalsService.findOneByUserId(
+    const bodyVitalsLogs = await this.bodyVitalsService.findByUserId(
       currentUser.userId,
     );
-    return await this.bodyVitalsDetailsService.findByBodyVitalsLogId(
-      bodyVitalLogs.id,
+    return await this.bodyVitalsDetailsService.findByBodyVitalsLogIds(
+      bodyVitalsLogs.map((bodyVitasLog) => bodyVitasLog.id),
       payload,
     );
   }
