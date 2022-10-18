@@ -54,10 +54,6 @@ export class User extends EverfitBaseEntity {
   @Column({ name: 'last_vitals_log_one_month', nullable: true })
   lastVitalsLogTwoMonths?: string;
 
-  @Expose()
-  @Column({ name: 'last_vitals_log_two_months', nullable: true })
-  lastVitalsLogTwoMonths?: string;
-
   @OneToMany(() => BodyVitalsLog, (bodyVitalsLog) => bodyVitalsLog.user)
   bodyVitalLogs: BodyVitalsLog[];
 
