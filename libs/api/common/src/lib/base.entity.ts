@@ -2,12 +2,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  BaseEntity,
   PrimaryColumn,
 } from 'typeorm';
 import { Expose, Exclude } from 'class-transformer';
 
-export abstract class EverfitBaseEntity extends BaseEntity {
+export abstract class EverfitBaseEntity {
   @Expose()
   @PrimaryColumn()
   id: string;
